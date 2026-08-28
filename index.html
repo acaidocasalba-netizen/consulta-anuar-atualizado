@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consulta Anuar</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f4f4;color:#151515}
+.container{max-width:1000px;margin:auto;padding:18px}
+.header{background:#111;color:#fff;border-radius:14px;padding:22px;margin-bottom:14px}
+.header small{opacity:.75}.header h1{margin:6px 0 4px;font-size:28px}.header p{margin:0;opacity:.8}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{flex:1;border:1px solid #ccc;background:#fff;padding:13px;border-radius:10px;font-weight:700}
+.tab.active{background:#111;color:#fff}
+.card{background:#fff;border:1px solid #ddd;border-radius:14px;padding:16px;margin-bottom:14px}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+input,select,button{font:inherit}
+input,select{width:100%;padding:13px;border:1px solid #ccc;border-radius:9px;background:#fff}
+.searchrow{display:grid;grid-template-columns:1fr auto;gap:8px}
+button{border:0;border-radius:9px;padding:13px 16px;font-weight:700;cursor:pointer}
+.primary{background:#111;color:#fff}.secondary{background:#eee;color:#111}.green{background:#16853a;color:#fff}
+.results{margin-top:12px}
+.product{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid #e2e2e2;border-radius:10px;padding:12px;margin:8px 0}
+.product h3{font-size:15px;margin:0 0 5px}.meta{font-size:12px;color:#666}.prices{font-size:13px;margin-top:5px}.price{font-weight:800}
+.product button{padding:9px 12px}
+.order-row{display:grid;grid-template-columns:1fr 70px 100px 34px;gap:7px;align-items:center;border-bottom:1px solid #eee;padding:10px 0}
+.order-row:last-child{border-bottom:0}
+.qty{padding:9px;text-align:center}
+.total{display:flex;justify-content:space-between;font-size:20px;font-weight:800;border-top:2px solid #111;padding-top:12px;margin-top:10px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.hidden{display:none}
+.empty{text-align:center;color:#777;padding:18px}
+.badge{display:inline-block;background:#eee;border-radius:20px;padding:4px 8px;font-size:11px;margin-top:4px}
+@media(max-width:650px){
+ .searchrow{grid-template-columns:1fr}
+ .product{grid-template-columns:1fr}
+ .product button{width:100%}
+ .order-row{grid-template-columns:1fr 55px 85px 34px}
+ .actions{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <small>ANUAR COSMÉTICOS</small>
+    <h1>Consulta Anuar</h1>
+    <p>Consulte produtos, monte o pedido e gere o faturamento para o cliente.</p>
+  </div>
+
+  <div class="tabs">
+    <button id="tabDist" class="tab active" onclick="setTable('dist')">Distribuidor</button>
+    <button id="tabSalon" class="tab" onclick="setTable('salon')">Salão Bahia</button>
+  </div>
+
+  <div class="card">
+    <label for="search">CÓDIGO OU NOME DO PRODUTO</label>
+    <div class="searchrow">
+      <input id="search" placeholder="Ex.: 000012 ou Shampoo Dux" oninput="searchProducts()">
+      <button class="primary" onclick="searchProducts()">Pesquisar</button>
+    </div>
+    <div id="results" class="results"><div class="empty">Digite o código ou nome para pesquisar.</div></div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Faturamento / Pedido</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label for="client">CLIENTE</label><input id="client" placeholder="Nome do cliente"></div>
+      <div><label for="date">DATA</label><input id="date" type="date"></div>
+    </div>
+    <div id="order"><div class="empty">Nenhum produto adicionado.</div></div>
+    <div class="total"><span>Total</span><span id="total">R$ 0,00</span></div>
+    <div class="actions">
+      <button class="primary" onclick="generateInvoice()">Gerar faturamento</button>
+      <button class="green" onclick="sendWhatsApp()">Enviar pelo WhatsApp</button>
+    </div>
+    <button class="secondary" style="width:100%;margin-top:8px" onclick="clearOrder()">Limpar pedido</button>
+  </div>
+
+  <div id="invoiceCard" class="card hidden">
+    <h2 style="margin-top:0">Faturamento gerado</h2>
+    <textarea id="invoiceText" style="width:100%;min-height:260px;padding:12px;border:1px solid #ccc;border-radius:9px"></textarea>
+    <button class="secondary" style="width:100%;margin-top:8px" onclick="copyInvoice()">Copiar faturamento</button>
+  </div>
+</div>
+
+<script>
+const products = [{"name": "SHAMPOO ANTI-RESIDUOS MASTER", "code": "000001", "size": "1L", "price": 52.65, "category": "MASTER / PROACTIVE", "salonPrice": 177.0}, {"name": "QUERATINA CREME MASTER", "code": "000002", "size": "1KG", "price": 52.65, "category": "MASTER / PROACTIVE", "salonPrice": 177.0}, {"name": "REVITALIZADOR INTENSIVO MASTER", "code": "000003", "size": "1KG", "price": 52.65, "category": "MASTER / PROACTIVE", "salonPrice": 177.0}, {"name": "INTENSY LEAVE-IN MASTER", "code": "000004", "size": "1KG", "price": 52.65, "category": "MASTER / PROACTIVE", "salonPrice": 177.0}, {"name": "QUERATINA HIDROLISADA", "code": "000503", "size": "500mL", "price": 59.5, "category": "MASTER / PROACTIVE", "salonPrice": 173.2}, {"name": "RECONSTRUTOR ÓLEOS ESPECIAIS", "code": "000300", "size": "1KG", "price": 43.9, "category": "MASTER / PROACTIVE", "salonPrice": 117.6}, {"name": "RECONSTRUTOR MORANGO", "code": "000301", "size": "1KG", "price": 43.9, "category": "MASTER / PROACTIVE", "salonPrice": null}, {"name": "SUPLEMENTO PROT ARGAN", "code": "000303", "size": "1KG", "price": 43.9, "category": "MASTER / PROACTIVE", "salonPrice": 117.6}, {"name": "SUPLEM. PROT. COG. DO SOL", "code": "000302", "size": "1KG", "price": 43.9, "category": "OUTROS", "salonPrice": null}, {"name": "SHAMPOO PROTEÍNAS GALÃO", "code": "001906", "size": "3,5L", "price": 69.65, "category": "OUTROS", "salonPrice": null}, {"name": "SHAMPOO DETOX MANUTENÇÃO AGATA", "code": "000935", "size": "300mL", "price": 17.6, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM HIDRATANTE MANUTENÇÃO AGATA", "code": "000936", "size": "300g", "price": 17.6, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM BIFÁSICO AGATA", "code": "000949", "size": "300mL", "price": 20.5, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM MASCARA AGATA", "code": "001300", "size": "220g", "price": 14.6, "category": "OUTROS", "salonPrice": null}, {"name": "SHAMPOO DETOX MANUTENÇÃO QUARTZO", "code": "000937", "size": "300mL", "price": 17.6, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM HIDRATANTE MANUTENÇÃO QUARTZO", "code": "000938", "size": "300g", "price": 17.6, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM BIFÁSICO QUARTZO", "code": "000950", "size": "300mL", "price": 20.5, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM MASCARA QUARTZO", "code": "001301", "size": "220g", "price": 14.6, "category": "OUTROS", "salonPrice": null}, {"name": "SHAMPOO DETOX MANUTENÇÃO LAZULI", "code": "000939", "size": "300mL", "price": 17.6, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM HIDRATANTE MANUTENÇÃO LAZULI", "code": "000940", "size": "300g", "price": 17.6, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM BIFÁSICO LAZULI", "code": "000951", "size": "300mL", "price": 20.5, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM MASCARA LAZULI", "code": "001302", "size": "220g", "price": 14.6, "category": "OUTROS", "salonPrice": null}, {"name": "SHAMPOO DETOX MANUTENÇÃO SAFIRA", "code": "000941", "size": "300mL", "price": 17.6, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM HIDRATANTE MANUTENÇÃO SAFIRA", "code": "000942", "size": "300g", "price": 17.6, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM BIFÁSICO SAFIRA", "code": "000952", "size": "300mL", "price": 20.5, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM MASCARA SAFIRA", "code": "001303", "size": "220g", "price": 14.6, "category": "OUTROS", "salonPrice": null}, {"name": "SHAMPOO DETOX GALÃO AGATA", "code": "001911", "size": "3,5L", "price": 73.3, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM HIDRATANTE GALÃO AGATA", "code": "001912", "size": "3,5KG", "price": 84.3, "category": "OUTROS", "salonPrice": null}, {"name": "SHAMPOO DETOX GALÃO QUARTZO", "code": "001913", "size": "3,5L", "price": 73.3, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM HIDRATANTE GALÃO QUARTZO", "code": "001914", "size": "3,5KG", "price": 84.3, "category": "OUTROS", "salonPrice": null}, {"name": "SHAMPOO DETOX GALÃO LAZULI", "code": "001915", "size": "3,5L", "price": 73.3, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM HIDRATANTE GALÃO LAZULI", "code": "001916", "size": "3,5KG", "price": 84.3, "category": "OUTROS", "salonPrice": null}, {"name": "SHAMPOO DETOX GALÃO SAFIRA", "code": "001917", "size": "3,5L", "price": 73.3, "category": "OUTROS", "salonPrice": null}, {"name": "DEFRIRUM HIDRATANTE GALÃO SAFIRA", "code": "001918", "size": "3,5KG", "price": 84.3, "category": "OUTROS", "salonPrice": null}, {"name": "MIL-K MAX", "code": "000505", "size": "500mL", "price": 59.5, "category": "OUTROS", "salonPrice": null}, {"name": "FORÇA MAXIMA", "code": "001908", "size": "3,5KG", "price": 175.55, "category": "OUTROS", "salonPrice": null}, {"name": "FORÇA MAXIMA", "code": "000042", "size": "1 KG", "price": 59.0, "category": "OUTROS", "salonPrice": 156.0}, {"name": "LIFTING CREAM", "code": "000306", "size": "1KG", "price": 117.0, "category": "OUTROS", "salonPrice": null}, {"name": "SHAMPOO MANUTENÇÃO SELF CARE- 300mL Código 000900 REESTRUTURADOR MANUTENÇÃO SELF CARE- 300g Código 000901 SELADOR LEAVE-IN MANUTENÇÃO SELF CARE", "code": "000902", "size": "300g", "price": 17.0, "category": "ESSENCES / SELF CARE", "salonPrice": 36.0}, {"name": "DEFRIRUM MASCÁRA HIDRATANTE SELF CARE", "code": "000706", "size": "500g", "price": 26.4, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "SHAMPOO MANUTENÇÃO CRISTAL", "code": "000922", "size": "300mL", "price": 17.0, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "CONDICIONADOR LEAVE-IN MANUT. CRISTAL", "code": "000923", "size": "300g", "price": 17.0, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "SHAMPOO MANUTENÇÃO ERVAS", "code": "000924", "size": "300mL", "price": 17.0, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "CONDICIONADOR MANUTENÇÃO ERVAS", "code": "000925", "size": "300g", "price": 17.0, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "SHAMPOO MANUT. FRUTAS VERMELHAS", "code": "000926", "size": "300mL", "price": 17.0, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "CONDICIONADOR MANUT. FRUTAS VERMELHAS", "code": "000927", "size": "300g", "price": 17.0, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "SHAMPOO MANUTENÇÃO PROTEINAS", "code": "000928", "size": "300mL", "price": 17.0, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "CONDICIONADOR MANUTENÇÃO PROTEINAS", "code": "000929", "size": "300g", "price": 17.0, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "SHAMPOO PROFISSIONAL CRISTAL", "code": "000018", "size": "1L", "price": 34.15, "category": "ESSENCES / SELF CARE", "salonPrice": 84.0}, {"name": "CONDICIONADOR PROFISSIONAL CRISTAL", "code": "000019", "size": "1KG", "price": 34.15, "category": "ESSENCES / SELF CARE", "salonPrice": 84.0}, {"name": "SHAMPOO PROFISSIONAL ERVAS", "code": "000020", "size": "1L", "price": 34.15, "category": "ESSENCES / SELF CARE", "salonPrice": 84.0}, {"name": "CONDICIONADOR PROFISSIONAL ERVAS", "code": "000021", "size": "1KG", "price": 34.15, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "SHAMPOO PROF. FRUTAS VERMELHAS", "code": "000022", "size": "1L", "price": 34.15, "category": "ESSENCES / SELF CARE", "salonPrice": 84.0}, {"name": "CONDICIONADOR PROF. FRUTAS VERMELHAS", "code": "000023", "size": "1KG", "price": 34.15, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "SHAMPOO PROFISSIONAL PROTEINAS", "code": "000024", "size": "1L", "price": 34.15, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "CONDICIONADOR PROFISSIONAL PROTEINAS", "code": "000025", "size": "1KG", "price": 34.15, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "SHAMPOO CRISTAL GALÃO", "code": "001900", "size": "3,5L", "price": 69.65, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "CONDICIONADOR CRISTAL LEAVE-IN", "code": "001901", "size": "3,5KG", "price": 69.65, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "SHAMPOO ERVAS GALÃO", "code": "001902", "size": "3,5L", "price": 69.65, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "CONDICIONADOR ERVAS LEAVE-IN", "code": "001903", "size": "3,5KG", "price": 69.65, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "SHAMPOO FRUTAS VERMELHAS GALÃO", "code": "001904", "size": "3,5L", "price": 69.65, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "CONDICIONADOR FRUTAS VERMELHAS LEAVE-IN", "code": "001905", "size": "3,5KG", "price": 69.65, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "CONDICIONADOR PROTEINAS LEAVE-IN", "code": "001907", "size": "3,5KG", "price": 69.65, "category": "ESSENCES / SELF CARE", "salonPrice": null}, {"name": "DEFRIRUM MODELADOR", "code": "000921", "size": "300g", "price": 17.0, "category": "FINISHING", "salonPrice": null}, {"name": "DEFRIRUM MODELADOR", "code": "000500", "size": "500g", "price": 26.3, "category": "FINISHING", "salonPrice": null}, {"name": "SERUM REPARADOR", "code": "001705", "size": "60mL", "price": 34.35, "category": "FINISHING", "salonPrice": null}, {"name": "MAX BRILHO FINISHING", "code": "001702", "size": "60mL", "price": 31.35, "category": "FINISHING", "salonPrice": null}, {"name": "NEUTRALIZANTE LIZ", "code": "000032", "size": "1L", "price": 34.1, "category": "LIZ", "salonPrice": null}, {"name": "TEXTURIZADOR LIZ", "code": "001505", "size": "250g", "price": 27.2, "category": "LIZ", "salonPrice": null}, {"name": "SHAMPOO MANUTENÇÃO LIZ", "code": "000903", "size": "300ML", "price": 17.0, "category": "LIZ", "salonPrice": 36.0}, {"name": "POWER MANUTENÇÃO LIZ", "code": "000904", "size": "300g", "price": 17.0, "category": "LIZ", "salonPrice": 36.0}, {"name": "DEFRIRUM MANUTENÇÃO LIZ", "code": "000905", "size": "300g", "price": 17.0, "category": "LIZ", "salonPrice": null}, {"name": "SHAMPOO PROFISSIONAL LIZ", "code": "000015", "size": "1L", "price": 32.4, "category": "LIZ", "salonPrice": 93.0}, {"name": "POWER PROFISSIONAL LIZ", "code": "000016", "size": "1KG", "price": 48.6, "category": "LIZ", "salonPrice": 93.0}, {"name": "DEFRIRUM PROFISSIONAL LIZ", "code": "000017", "size": "1KG", "price": 48.6, "category": "LIZ", "salonPrice": null}, {"name": "MASCARA HIDRATANTE LIZ", "code": "000700", "size": "500g", "price": 26.4, "category": "LIZ", "salonPrice": null}, {"name": "NEUTRALIZANTE DUX", "code": "000031", "size": "1L", "price": 37.5, "category": "LIZ", "salonPrice": null}, {"name": "NEUTRALIZANTE LIQUIDO", "code": "000506", "size": "500mL", "price": 19.3, "category": "LIZ", "salonPrice": null}, {"name": "PROTECTOR DUX", "code": "000909", "size": "300mL", "price": 55.0, "category": "DUX", "salonPrice": null}, {"name": "TEXTURIZADOR HIDRÓXIDO DE SÓDIO DUX", "code": "000304", "size": "1KG", "price": 50.3, "category": "DUX", "salonPrice": null}, {"name": "TEXTURIZADOR HIDRÓXIDO DE CÁLCIO DUX", "code": "000305", "size": "1KG", "price": 41.7, "category": "DUX", "salonPrice": null}, {"name": "ACTIV DUX", "code": "000502", "size": "500mL", "price": 48.7, "category": "DUX", "salonPrice": null}, {"name": "RELAXANTE DUX", "code": "001504", "size": "250g", "price": 20.95, "category": "DUX", "salonPrice": null}, {"name": "SHAMPOO MANUTENÇÃO DUX", "code": "000910", "size": "300mL", "price": 17.0, "category": "DUX", "salonPrice": 36.0}, {"name": "POWER MANUTENÇÃO DUX", "code": "000911", "size": "300g", "price": 17.0, "category": "DUX", "salonPrice": null}, {"name": "DEFRIRUM MANUTENÇÃO DUX", "code": "000912", "size": "300g", "price": 17.0, "category": "DUX", "salonPrice": null}, {"name": "SHAMPOO PROFISSIONAL DUX", "code": "000012", "size": "1L", "price": 32.4, "category": "DUX", "salonPrice": 93.0}, {"name": "POWER PROFISSIONAL DUX", "code": "000013", "size": "1KG", "price": 48.6, "category": "DUX", "salonPrice": 93.0}, {"name": "DEFRIRUM PROFISSIONAL DUX", "code": "000014", "size": "1KG", "price": 48.6, "category": "DUX", "salonPrice": 93.0}, {"name": "DEFRIRUM + CACHOS PROFISSIONAL DUX", "code": "000930", "size": "300g", "price": 13.2, "category": "DUX", "salonPrice": null}, {"name": "DEFRIRUM + CACHOS PROFISSIONAL DUX", "code": "000501", "size": "500g", "price": 16.0, "category": "DUX", "salonPrice": 39.6}, {"name": "DEFRIRUM + CACHOS PROFISSIONAL DUX", "code": "000033", "size": "1KG", "price": 26.2, "category": "DUX", "salonPrice": null}, {"name": "DEFRIRUM + CACHOS PROFISSIONAL DUX", "code": "001909", "size": "3,5KG", "price": 93.6, "category": "DUX", "salonPrice": null}, {"name": "MASCARA HIDRAT. DUX", "code": "000703", "size": "500g", "price": 26.4, "category": "DUX", "salonPrice": 64.8}, {"name": "REDUX CREAM TÉRMICO KER", "code": "000034", "size": "1KG", "price": 146.4, "category": "DUX", "salonPrice": 420.0}, {"name": "REDUX CREAM TÉRMICO KER", "code": "001910", "size": "3,5KG", "price": 438.0, "category": "DUX", "salonPrice": null}, {"name": "REDUX CREAM TÉRMICO KER", "code": "000953", "size": "200g", "price": 30.0, "category": "DUX", "salonPrice": null}, {"name": "MAX SHAMPOO MANUTENÇÃO SOS", "code": "000906", "size": "300mL", "price": 17.0, "category": "SOS", "salonPrice": null}, {"name": "MAX POWER MANUTENÇÃO SOS", "code": "000907", "size": "300g", "price": 17.0, "category": "SOS", "salonPrice": null}, {"name": "MAX DEFRIRUM MANUTENÇÃO SOS", "code": "000908", "size": "300g", "price": 17.0, "category": "SOS", "salonPrice": null}, {"name": "MAX SHAMPOO PROFISSIONAL SOS", "code": "000005", "size": "1L", "price": 63.15, "category": "SOS", "salonPrice": 207.5}, {"name": "MAX POWER IN PROFISSIONAL SOS", "code": "000006", "size": "1KG", "price": 63.15, "category": "SOS", "salonPrice": 207.5}, {"name": "MAX POWER OUT PROFISSIONAL SOS", "code": "000007", "size": "1KG", "price": 63.15, "category": "SOS", "salonPrice": null}, {"name": "MAX DEFRIRUM PROFISSIONAL SOS", "code": "000008", "size": "1KG", "price": 63.15, "category": "SOS", "salonPrice": 207.5}, {"name": "MAX MASCARA MANUTENÇÃO SOS", "code": "000701", "size": "500g", "price": 26.4, "category": "SOS", "salonPrice": null}, {"name": "MASCARA HIDRATANTE SOS", "code": "000702", "size": "500g", "price": 26.4, "category": "SOS", "salonPrice": null}, {"name": "KERATIN MAX H2O", "code": "000504", "size": "500mL", "price": 59.5, "category": "KER", "salonPrice": null}, {"name": "SHAMPOO MANUTENÇÃO KER", "code": "000919", "size": "300mL", "price": 17.0, "category": "KER", "salonPrice": 36.0}, {"name": "POWER DEFRIRUM MANUTENÇÃO KER", "code": "000920", "size": "300mL", "price": 17.0, "category": "KER", "salonPrice": null}, {"name": "CREME MODELADOR LORD KEYMAN", "code": "001304", "size": "220g", "price": 20.5, "category": "KEYMAN", "salonPrice": null}, {"name": "CREME MODELADOR DUKE KEYMAN", "code": "001305", "size": "220g", "price": 20.5, "category": "KEYMAN", "salonPrice": null}, {"name": "EMULSAO REV. CREMOSA COLOR 04 VOL", "code": "000041", "size": "1L", "price": 23.9, "category": "COLOR", "salonPrice": null}, {"name": "EMULSAO REV. CREMOSA COLOR 10 VOL", "code": "000027", "size": "1L", "price": 23.9, "category": "COLOR", "salonPrice": null}, {"name": "EMULSAO REV. CREMOSA COLOR 20 VOL", "code": "000028", "size": "1L", "price": 23.9, "category": "COLOR", "salonPrice": null}, {"name": "EMULSAO REV. CREMOSA COLOR 30 VOL", "code": "000029", "size": "1L", "price": 23.9, "category": "COLOR", "salonPrice": null}, {"name": "EMULSAO REV. CREMOSA COLOR 40 VOL", "code": "000030", "size": "1L", "price": 23.9, "category": "COLOR", "salonPrice": null}, {"name": "SHAMPOO MANUTENÇÃO COLOR", "code": "000913", "size": "300mL", "price": 17.0, "category": "COLOR", "salonPrice": null}, {"name": "POWER MANUTENÇÃO COLOR", "code": "000914", "size": "300g", "price": 17.0, "category": "COLOR", "salonPrice": null}, {"name": "DEFRIRUM MANUTENÇÃO COLOR", "code": "000915", "size": "300g", "price": 17.0, "category": "COLOR", "salonPrice": null}, {"name": "SHAMPOO PROFISSIONAL COLOR", "code": "000009", "size": "1L", "price": 32.4, "category": "COLOR", "salonPrice": 93.0}, {"name": "POWER PROFISSIONAL COLOR", "code": "000010", "size": "1KG", "price": 48.5, "category": "COLOR", "salonPrice": 93.0}, {"name": "DEFRIRUM PROFISSIONAL COLOR", "code": "000011", "size": "1KG", "price": 48.5, "category": "COLOR", "salonPrice": null}, {"name": "PÓ DESCOLORANTE AZUL COLOR", "code": "000307", "size": "500g", "price": 51.1, "category": "ESPECIAL BLOND", "salonPrice": null}, {"name": "PÓ DESCOLORANTE VERDE COLOR", "code": "000308", "size": "500g", "price": 51.1, "category": "ESPECIAL BLOND", "salonPrice": null}, {"name": "PÓ DESCOLORANTE +PLEX WHITE- 500g Código 000309 SHAMPOO MANUTENÇÃO BLOND", "code": "000916", "size": "300mL", "price": 17.0, "category": "ESPECIAL BLOND", "salonPrice": 36.0}, {"name": "POWER MANUTENÇÃO BLOND", "code": "000917", "size": "300g", "price": 17.0, "category": "ESPECIAL BLOND", "salonPrice": null}, {"name": "DEFRIRUM MANUTENÇÃO BLOND", "code": "000918", "size": "300g", "price": 17.0, "category": "ESPECIAL BLOND", "salonPrice": null}, {"name": "MASCARA HIDRATANTE BLOND", "code": "000705", "size": "500g", "price": 26.4, "category": "ESPECIAL BLOND", "salonPrice": 64.8}, {"name": "SHAMPOO VERDE MAN. ESPECIAL BLOND", "code": "000943", "size": "300mL", "price": 17.6, "category": "ESPECIAL BLOND", "salonPrice": null}, {"name": "MATIZADOR VERDE MAN. ESPECIAL BLOND", "code": "000944", "size": "300g", "price": 17.6, "category": "ESPECIAL BLOND", "salonPrice": null}, {"name": "DEFRIRUM VERDE MAN. ESPECIAL BLOND", "code": "000945", "size": "300g", "price": 17.6, "category": "ESPECIAL BLOND", "salonPrice": null}, {"name": "SHAMPOO VIOLETA MAN. ESPECIAL BLOND", "code": "000946", "size": "300mL", "price": 17.6, "category": "ESPECIAL BLOND", "salonPrice": null}, {"name": "MATIZADOR VIOLETA MAN. ESPECIAL BLOND", "code": "000947", "size": "300g", "price": 17.6, "category": "ESPECIAL BLOND", "salonPrice": null}, {"name": "DEFRIRUM VIOLETA MAN. ESPECIAL BLOND", "code": "000948", "size": "300g", "price": 17.6, "category": "ESPECIAL BLOND", "salonPrice": null}, {"name": "MATIZADOR VERDE ESPECIAL BLOND", "code": "000037", "size": "1KG", "price": 80.4, "category": "ESPECIAL BLOND", "salonPrice": null}, {"name": "MATIZADOR VIOLETA ESPECIAL BLOND", "code": "000038", "size": "1KG", "price": 80.4, "category": "ESPECIAL BLOND", "salonPrice": null}];
+let table = 'dist';
+let order = [];
+
+const brl = v => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v);
+const today = new Date();
+document.getElementById('date').value = today.toISOString().slice(0,10);
+
+function priceOf(p){
+  if(table==='salon') return p.salonPrice ?? p.price;
+  return p.price;
+}
+function setTable(t){
+  table=t;
+  document.getElementById('tabDist').classList.toggle('active',t==='dist');
+  document.getElementById('tabSalon').classList.toggle('active',t==='salon');
+  searchProducts();
+  renderOrder();
+}
+function searchProducts(){
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  const box=document.getElementById('results');
+  if(!q){box.innerHTML='<div class="empty">Digite o código ou nome para pesquisar.</div>';return;}
+  const found=products.filter(p=>{
+    const hay=(p.code+' '+p.name+' '+p.category+' '+p.size).toLowerCase();
+    return hay.includes(q) && (table==='dist' || p.salonPrice!==null);
+  }).slice(0,30);
+  if(!found.length){box.innerHTML='<div class="empty">Nenhum produto encontrado.</div>';return;}
+  box.innerHTML=found.map(p=>`
+    <div class="product">
+      <div>
+        <h3>${esc(p.name)}</h3>
+        <div class="meta">Código ${p.code} • ${esc(p.size)} • ${esc(p.category)}</div>
+        <div class="prices">Preço: <span class="price">${brl(priceOf(p))}</span>
+        ${table==='dist' && p.salonPrice!==null ? ` <span class="badge">Salão Bahia: ${brl(p.salonPrice)}</span>`:''}</div>
+      </div>
+      <button class="primary" onclick="addProduct('${p.code}')">Adicionar</button>
+    </div>`).join('');
+}
+function addProduct(code){
+  const p=products.find(x=>x.code===code);
+  if(!p)return;
+  const existing=order.find(x=>x.code===code && x.table===table);
+  if(existing) existing.qty++;
+  else order.push({code:p.code,name:p.name,size:p.size,qty:1,unit:priceOf(p),table});
+  renderOrder();
+}
+function renderOrder(){
+  const box=document.getElementById('order');
+  if(!order.length){box.innerHTML='<div class="empty">Nenhum produto adicionado.</div>';document.getElementById('total').textContent=brl(0);return;}
+  box.innerHTML=order.map((x,i)=>`
+    <div class="order-row">
+      <div><b>${esc(x.name)}</b><div class="meta">Código ${x.code} • ${esc(x.size)} • ${x.table==='salon'?'Salão Bahia':'Distribuidor'}</div></div>
+      <input class="qty" type="number" min="1" value="${x.qty}" onchange="changeQty(${i},this.value)">
+      <b>${brl(x.unit*x.qty)}</b>
+      <button class="secondary" onclick="removeItem(${i})">×</button>
+    </div>`).join('');
+  const total=order.reduce((s,x)=>s+x.unit*x.qty,0);
+  document.getElementById('total').textContent=brl(total);
+}
+function changeQty(i,v){order[i].qty=Math.max(1,parseInt(v)||1);renderOrder();}
+function removeItem(i){order.splice(i,1);renderOrder();}
+function clearOrder(){order=[];renderOrder();document.getElementById('invoiceCard').classList.add('hidden');}
+function invoiceMessage(){
+  const client=document.getElementById('client').value.trim()||'Cliente';
+  const date=document.getElementById('date').value;
+  const dateBr=date?date.split('-').reverse().join('/'):'';
+  const total=order.reduce((s,x)=>s+x.unit*x.qty,0);
+  let text=`ANUAR COSMÉTICOS\\nFATURAMENTO / PEDIDO\\n\\nCliente: ${client}\\nData: ${dateBr}\\n\\n`;
+  order.forEach(x=>{text+=`${x.qty}x ${x.name} - ${brl(x.unit)} = ${brl(x.unit*x.qty)}\\nCódigo: ${x.code}\\n`;});
+  text+=`\\nTOTAL: ${brl(total)}\\n\\nObrigado pela preferência!`;
+  return text;
+}
+function generateInvoice(){
+  if(!order.length){alert('Adicione pelo menos um produto.');return;}
+  document.getElementById('invoiceText').value=invoiceMessage();
+  document.getElementById('invoiceCard').classList.remove('hidden');
+  document.getElementById('invoiceCard').scrollIntoView({behavior:'smooth'});
+}
+async function copyInvoice(){
+  const text=document.getElementById('invoiceText').value;
+  try{await navigator.clipboard.writeText(text);alert('Faturamento copiado!');}
+  catch(e){document.getElementById('invoiceText').select();document.execCommand('copy');alert('Faturamento copiado!');}
+}
+function sendWhatsApp(){
+  if(!order.length){alert('Adicione pelo menos um produto.');return;}
+  const text=encodeURIComponent(invoiceMessage());
+  window.open('https://wa.me/?text='+text,'_blank');
+}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+</script>
+</body>
+</html>
