@@ -2097,5 +2097,166 @@ async function copyInvoice(){const text=document.getElementById('invoiceText').v
 function sendWhatsApp(){if(!order.length){alert('Adicione pelo menos um produto.');return}window.open('https://wa.me/?text='+encodeURIComponent(invoiceMessage()),'_blank')}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 </script>
-</body>
+<<!-- SUPABASE AUTH -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://cgzrdwdscrrvshybvxpu.supabase.co";
+const SUPABASE_KEY = "sb_publishable_0d9jFv1i8vRL4lAcDR8QrA_PU4pKLcI"
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+
+ 
+
+  
+    mostrarLogin();
+  }
+}
+
+function mostrarLogin() {
+  document.body.innerHTML = `
+    <div style="
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#f5f5f5;
+      padding:20px;
+      font-family:Arial,sans-serif;
+    ">
+      <div style="
+        background:white;
+        padding:30px;
+        border-radius:16px;
+        width:100%;
+        max-width:400px;
+        box-shadow:0 5px 25px rgba(0,0,0,.12);
+      ">
+        <h2 style="margin-top:0;text-align:center;">
+          Consulta Anuar
+        </h2>
+
+        <p style="text-align:center;color:#666;">
+          Entre com seu e-mail e senha para acessar.
+        </p>
+
+        <input
+          id="loginEmail"
+          type="email"
+          placeholder="E-mail"
+          style="
+            width:100%;
+            padding:14px;
+            margin:10px 0;
+            border:1px solid #ddd;
+            border-radius:8px;
+            box-sizing:border-box;
+          "
+        >
+
+        <input
+          id="loginPassword"
+          type="password"
+          placeholder="Senha"
+          style="
+            width:100%;
+            padding:14px;
+            margin:10px 0;
+            border:1px solid #ddd;
+            border-radius:8px;
+            box-sizing:border-box;
+          "
+        >
+
+        <button
+          onclick="entrar()"
+          style="
+            width:100%;
+            padding:14px;
+            margin-top:10px;
+            background:#111;
+            color:white;
+            border:0;
+            border-radius:8px;
+            font-size:16px;
+            cursor:pointer;
+          "
+        >
+          Entrar
+        </button>
+
+        <button
+          onclick="criarConta()"
+          style="
+            width:100%;
+            padding:14px;
+            margin-top:10px;
+            background:white;
+            color:#111;
+            border:1px solid #111;
+            border-radius:8px;
+            font-size:16px;
+            cursor:pointer;
+          "
+        >
+          Criar conta
+        </button>
+
+        <p id="loginMensagem"
+           style="text-align:center;margin-top:15px;color:#d00;">
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+async function entrar() {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+  const mensagem = document.getElementById("loginMensagem");
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    mensagem.textContent = "E-mail ou senha incorretos.";
+    return;
+  }
+
+  location.reload();
+}
+
+async function criarConta() {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+  const mensagem = document.getElementById("loginMensagem");
+
+  if (!email || !password) {
+    mensagem.textContent = "Informe e-mail e senha.";
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.signUp({
+    email,
+    password
+  });
+
+  if (error) {
+    mensagem.textContent = error.message;
+    return;
+  }
+
+  mensagem.style.color = "green";
+  mensagem.textContent =
+    "Conta criada! Verifique seu e-mail para confirmar.";
+}
+
+verificarLogin();
+</script>/body>
 </html>
