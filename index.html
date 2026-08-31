@@ -121,6 +121,7 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
   #menuButton{top:18px;right:24px}
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div class="container">
@@ -161,6 +162,12 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
   </div>
   <div class="card">
     <h2 style="margin-top:0">Faturamento / Pedido</h2>
+<button type="button" id="btnGerarPDFFaturamento" onclick="gerarPDFFaturamento()"
+        style="margin-top:10px;padding:12px 16px;border:0;border-radius:10px;cursor:pointer;">
+  📄 Gerar faturamento em PDF
+</button>
+<div id="mensagemPDFFaturamento" style="font-size:13px;margin-top:6px;"></div>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label for="client">CLIENTE</label><input id="client" placeholder="Nome do cliente"></div>
       <div><label for="date">DATA</label><input id="date" type="date"></div>
@@ -2718,6 +2725,141 @@ document.addEventListener("keydown", function(e){
   if(e.key === "Escape") fecharMenu();
 });
 
+</script>
+
+
+<script>
+async function gerarPDFFaturamento() {
+  const aviso = document.getElementById("mensagemPDFFaturamento");
+  if (aviso) aviso.textContent = "Gerando PDF...";
+
+  try {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      throw new Error("Biblioteca PDF ainda não carregou. Tente novamente.");
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+    const moeda = valor => {
+      const n = Number(valor || 0);
+      return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    };
+
+    const textoSeguro = valor => String(valor ?? "").trim();
+
+    // Tenta aproveitar os campos existentes do faturamento/pedido.
+    const cliente =
+      document.querySelector("#clienteNome, #nomeCliente, [name='cliente'], [name='nomeCliente']")?.value ||
+      sessionStorage.getItem("consulta_anuar_cliente") ||
+      "Cliente";
+
+    const descontoEl =
+      document.querySelector("#desconto, #valorDesconto, [name='desconto'], [name='valorDesconto']");
+    const desconto = descontoEl ? Number(String(descontoEl.value).replace(",", ".")) || 0 : 0;
+
+    // Procura itens de pedido em estruturas comuns já presentes na página.
+    let itens = [];
+    if (Array.isArray(window.pedidoAtual)) itens = window.pedidoAtual;
+    else if (Array.isArray(window.carrinho)) itens = window.carrinho;
+    else if (Array.isArray(window.pedido)) itens = window.pedido;
+    else if (Array.isArray(window.cart)) itens = window.cart;
+
+    // Fallback: extrai linhas de tabelas visíveis do faturamento.
+    if (!itens.length) {
+      const rows = [...document.querySelectorAll(
+        "#faturamento table tbody tr, #pedido table tbody tr, #carrinho table tbody tr"
+      )];
+      itens = rows.map(tr => {
+        const cells = [...tr.querySelectorAll("td")].map(td => td.innerText.trim());
+        return {
+          nome: cells[0] || "Produto",
+          quantidade: Number(cells[1]) || 1,
+          preco: Number((cells[2] || "0").replace(/[^\d,.-]/g, "").replace(",", ".")) || 0,
+          total: Number((cells[3] || "0").replace(/[^\d,.-]/g, "").replace(",", ".")) || 0
+        };
+      });
+    }
+
+    const totalCalculado = itens.reduce((soma, item) => {
+      const quantidade = Number(item.quantidade ?? item.qtd ?? item.quantity ?? 1) || 1;
+      const preco = Number(item.preco ?? item.precoVenda ?? item.price ?? 0) || 0;
+      const total = Number(item.total ?? item.subtotal ?? (quantidade * preco)) || 0;
+      return soma + total;
+    }, 0);
+
+    const totalEl =
+      document.querySelector("#total, #totalPedido, #valorTotal, [name='total'], [name='valorTotal']");
+    const totalTexto = totalEl?.value ?? totalEl?.textContent ?? "";
+    const totalInformado = Number(String(totalTexto).replace(/[^\d,.-]/g, "").replace(",", ".")) || 0;
+    const total = totalInformado || Math.max(0, totalCalculado - desconto);
+
+    const data = new Date().toLocaleDateString("pt-BR");
+
+    doc.setFontSize(18);
+    doc.text("CONSULTA ANUAR", 20, 20);
+    doc.setFontSize(13);
+    doc.text("Faturamento / Pedido", 20, 29);
+
+    doc.setFontSize(10);
+    doc.text(`Cliente: ${textoSeguro(cliente)}`, 20, 39);
+    doc.text(`Data: ${data}`, 20, 46);
+
+    let y = 58;
+    doc.setFontSize(10);
+    doc.text("Produto", 20, y);
+    doc.text("Qtd.", 125, y);
+    doc.text("Valor", 150, y);
+    doc.text("Total", 175, y);
+
+    y += 7;
+    doc.line(20, y - 4, 190, y - 4);
+
+    if (!itens.length) {
+      doc.text("Nenhum produto encontrado no pedido.", 20, y);
+      y += 8;
+    } else {
+      for (const item of itens) {
+        const nome = textoSeguro(item.nome ?? item.name ?? item.produto ?? "Produto");
+        const qtd = Number(item.quantidade ?? item.qtd ?? item.quantity ?? 1) || 1;
+        const preco = Number(item.preco ?? item.precoVenda ?? item.price ?? 0) || 0;
+        const subtotal = Number(item.total ?? item.subtotal ?? (qtd * preco)) || 0;
+
+        const linhas = doc.splitTextToSize(nome, 95);
+        doc.text(linhas, 20, y);
+        doc.text(String(qtd), 125, y);
+        doc.text(moeda(preco), 150, y);
+        doc.text(moeda(subtotal), 175, y);
+        y += Math.max(6, linhas.length * 5);
+
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+      }
+    }
+
+    y += 4;
+    doc.line(120, y, 190, y);
+    y += 8;
+    doc.text(`Desconto: ${moeda(desconto)}`, 125, y);
+    y += 8;
+    doc.setFontSize(13);
+    doc.text(`TOTAL: ${moeda(total)}`, 125, y);
+
+    y += 16;
+    doc.setFontSize(9);
+    doc.text("Documento gerado pelo sistema Consulta Anuar.", 20, y);
+
+    const nomeArquivo = `Faturamento_Anuar_${new Date().toISOString().slice(0,10)}.pdf`;
+    doc.save(nomeArquivo);
+
+    if (aviso) aviso.textContent = "PDF gerado com sucesso.";
+  } catch (erro) {
+    console.error("Erro ao gerar PDF:", erro);
+    if (aviso) aviso.textContent = "Não foi possível gerar o PDF. Verifique o faturamento e tente novamente.";
+  }
+}
 </script>
 
 </body>
