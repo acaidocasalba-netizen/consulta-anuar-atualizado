@@ -38,6 +38,88 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
 @media(max-width:700px){.admin-grid{grid-template-columns:repeat(2,1fr)}.admin-form-grid,.admin-product-list{grid-template-columns:1fr}.admin-top{position:relative}.admin-body{padding:12px}}
 
 .admin-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.admin-edit-grid .full{grid-column:1/-1}.admin-danger{background:#b00020;color:#fff}.admin-warning{background:#fff4d6;color:#7a5200;border:1px solid #e7c66b}.admin-success{background:#e7f7ec;color:#176b31;border:1px solid #b8dfc3}.admin-kpi{font-size:26px;font-weight:800}.admin-filter{display:grid;grid-template-columns:1fr 180px;gap:8px;margin-bottom:10px}.admin-table input,.admin-table select{min-width:110px;padding:8px}.admin-table .mini{padding:7px 9px;font-size:12px}.admin-pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eee;font-size:11px}.admin-pill.due{background:#fff4d6;color:#7a5200}.admin-pill.overdue{background:#fdeaea;color:#9b1c1c}.admin-pill.paid{background:#e7f7ec;color:#176b31}@media(max-width:700px){.admin-edit-grid,.admin-filter{grid-template-columns:1fr}.admin-edit-grid .full{grid-column:auto}}
+
+/* ===== MENU PRINCIPAL / MOBILE ===== */
+#menuButton{
+  position:fixed;
+  top:16px;
+  right:16px;
+  z-index:9998;
+  width:48px;
+  height:48px;
+  border-radius:14px;
+  background:#111;
+  color:#fff;
+  border:1px solid #333;
+  box-shadow:0 6px 20px rgba(0,0,0,.18);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  padding:0;
+}
+#menuButton:active{transform:scale(.96)}
+#menuBackdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  z-index:9997;
+  display:none;
+}
+#menuBackdrop.open{display:block}
+#menuLateral{
+  position:fixed;
+  top:0;
+  right:-340px;
+  left:auto;
+  width:min(320px,88vw);
+  height:100vh;
+  background:#fff;
+  z-index:9999;
+  box-shadow:-12px 0 35px rgba(0,0,0,.25);
+  padding:78px 18px 24px;
+  transition:right .25s ease;
+  overflow-y:auto;
+}
+#menuLateral.open{right:0}
+#menuLateral .menu-close{
+  position:absolute;
+  top:16px;
+  right:16px;
+  width:44px;
+  height:44px;
+  border-radius:12px;
+  background:#f1f1f1;
+  color:#111;
+  font-size:22px;
+  padding:0;
+}
+#menuLateral .menu-title{
+  font-size:12px;
+  font-weight:800;
+  color:#777;
+  letter-spacing:.08em;
+  margin:0 4px 12px;
+}
+#menuLateral a{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  padding:15px 14px;
+  margin:6px 0;
+  border-radius:12px;
+  color:#111;
+  text-decoration:none;
+  font-size:16px;
+  font-weight:700;
+  background:#f7f7f7;
+}
+#menuLateral a:active{background:#e9e9e9}
+#menuLateral #menuAdmin{background:#111;color:#fff}
+@media(min-width:651px){
+  #menuButton{top:18px;right:24px}
+}
 </style>
 </head>
 <body>
@@ -49,17 +131,21 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
   </div>
   </div>
 
-<!-- MENU -->
-<div id="menuLateral">
-    <button onclick="fecharMenu()">✕</button>
+<!-- MENU PRINCIPAL -->
+<button id="menuButton" type="button" aria-label="Abrir menu" onclick="abrirMenu()">☰</button>
+<div id="menuBackdrop" onclick="fecharMenu()"></div>
 
-    <a href="#">🏠 Início</a>
-    <a href="#">🔎 Consulta</a>
-    <a href="#">🛒 Novo pedido</a>
-    <a href="#">📋 Pedidos</a>
-    <a href="#">👤 Minha conta</a>
+<div id="menuLateral" aria-hidden="true">
+    <button class="menu-close" type="button" aria-label="Fechar menu" onclick="fecharMenu()">✕</button>
+    <div class="menu-title">MENU</div>
 
-   <a href="#" id="menuAdmin" style="display:none;" onclick="abrirAdministracao();return false;">👑 Administração</a>
+    <a href="#" onclick="fecharMenu();return false;">🏠 Início</a>
+    <a href="#search" onclick="fecharMenu();setTimeout(()=>document.getElementById('search')?.focus(),250);return false;">🔎 Consulta</a>
+    <a href="#order" onclick="fecharMenu();document.getElementById('client')?.scrollIntoView({behavior:'smooth',block:'start'});return false;">🛒 Novo pedido</a>
+    <a href="#" onclick="fecharMenu();return false;">📋 Pedidos</a>
+    <a href="#" onclick="fecharMenu();return false;">👤 Minha conta</a>
+
+    <a href="#" id="menuAdmin" style="display:none;" onclick="abrirAdministracao();return false;">👑 Administração</a>
 </div>
   <div class="tabs">
     <button id="tabDist" class="tab active" onclick="setTable('dist')">Distribuidor</button>
@@ -2311,6 +2397,9 @@ function liberarSite() {
   });
 
   sessionStorage.setItem("consulta_anuar_logado", "1");
+
+  const menuButton = document.getElementById("menuButton");
+  if (menuButton) menuButton.style.display = "flex";
 }
 
 
@@ -2605,13 +2694,29 @@ function carregarFaturamentoAdmin(){if(!ehAdmin())return;supabaseClient.from('pe
 
 
 verificarAcesso();
-  function abrirMenu() {
-  document.getElementById("menuLateral").style.left = "0";
+function abrirMenu() {
+  const menu = document.getElementById("menuLateral");
+  const backdrop = document.getElementById("menuBackdrop");
+  if (!menu) return;
+  menu.classList.add("open");
+  menu.setAttribute("aria-hidden","false");
+  backdrop?.classList.add("open");
+  document.body.style.overflow = "hidden";
 }
 
 function fecharMenu() {
-  document.getElementById("menuLateral").style.left = "-300px";
+  const menu = document.getElementById("menuLateral");
+  const backdrop = document.getElementById("menuBackdrop");
+  if (!menu) return;
+  menu.classList.remove("open");
+  menu.setAttribute("aria-hidden","true");
+  backdrop?.classList.remove("open");
+  document.body.style.overflow = "";
 }
+
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape") fecharMenu();
+});
 
 </script>
 
