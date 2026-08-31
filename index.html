@@ -2362,13 +2362,9 @@ const { data: perfil, error: erroPerfil } = await supabaseClient
   .single();
 
 if (erroPerfil) {
-  console.error(erroPerfil);
-  mensagem.textContent = "Não foi possível verificar seu acesso.";
-  return;
-}
-if (erroPerfil) {
-    console.error(erroPerfil);
-    mensagem.textContent = "Erro ao verificar acesso: " + erroPerfil.message;
+    console.error("ERRO PERFIL:", erroPerfil);
+    mensagem.textContent =
+        "ERRO PERFIL: " + (erroPerfil.message || JSON.stringify(erroPerfil));
     return;
 }
 
