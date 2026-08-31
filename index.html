@@ -2103,10 +2103,18 @@ function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;',
 <script>
 const SUPABASE_URL = "https://cgzrdwdscrrvshybvxpu.supabase.co";
 const SUPABASE_KEY = "sb_publishable_0d9jFv1i8vRL4lAcDR8QrA_PU4pKLcI"
-
 const supabaseClient = supabase.createClient(
   SUPABASE_URL,
-  SUPABASE_KEY
+  SUPABASE_KEY,
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    }
+  }
+);
+
 async function verificarAcesso() {
   const { data: { session } } = await supabaseClient.auth.getSession();
 
