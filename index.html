@@ -2339,10 +2339,30 @@ async function entrar() {
 
     return;
   }
+console.log("LOGIN OK");
 
-  console.log("LOGIN OK");
+const { data: perfil, error: erroPerfil } = await supabaseClient
+  .from("perfis")
+  .select("tipo, acesso_ativo")
+  .eq("id", data.user.id)
+  .single();
 
-  liberarSite();
+if (erroPerfil) {
+  console.error(erroPerfil);
+  mensagem.textContent = "Não foi possível verificar seu acesso.";
+  return;
+}
+
+if (!perfil.acesso_ativo) {
+  mensagem.textContent = "Seu acesso está bloqueado.";
+  await supabaseClient.auth.signOut();
+  return;
+}
+
+sessionStorage.setItem("consulta_anuar_tipo", perfil.tipo);
+
+liberarSite();
+  
 }
 
 
