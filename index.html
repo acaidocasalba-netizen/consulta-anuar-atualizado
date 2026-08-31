@@ -2108,8 +2108,8 @@ const supabaseClient = supabase.createClient(
   SUPABASE_KEY,
   {
     auth: {
-      persistSession: false,
-      autoRefreshToken: false,
+      persistSession: true,
+      autoRefreshToken: true,
       detectSessionInUrl: false
     }
   }
@@ -2231,14 +2231,21 @@ async function entrar() {
     email,
     password
   });
-
-  if (error) {
-    mensagem.textContent = "E-mail ou senha incorretos.";
-    return;
-  }
-
-  location.reload();
+if (error) {
+  mensagem.textContent = "E-mail ou senha incorretos.";
+  return;
 }
+
+const { data: sessao } = await supabaseClient.auth.getSession();
+
+if (sessao.session) {
+  console.log("LOGIN OK - sessão encontrada");
+  location.reload();
+} else {
+  mensagem.textContent = "Login realizado, mas a sessão não foi encontrada.";
+  console.log("ERRO: sessão não encontrada");
+}
+  
 
 async function criarConta() {
   const email = document.getElementById("loginEmail").value;
