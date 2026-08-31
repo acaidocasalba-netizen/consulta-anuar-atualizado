@@ -2114,7 +2114,15 @@ const supabaseClient = supabase.createClient(
     }
   }
 );
+// EXIGIR LOGIN AO ABRIR O APLICATIVO
+const acabouDeFazerLogin =
+  sessionStorage.getItem("consulta_anuar_logado");
 
+if (acabouDeFazerLogin) {
+  sessionStorage.removeItem("consulta_anuar_logado");
+} else {
+  supabaseClient.auth.signOut();
+}
 async function verificarAcesso() {
   const { data: { session } } = await supabaseClient.auth.getSession();
 
