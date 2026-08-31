@@ -2107,7 +2107,12 @@ const SUPABASE_KEY = "sb_publishable_0d9jFv1i8vRL4lAcDR8QrA_PU4pKLcI"
 const supabaseClient = supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
-);
+);const abriuAgora = !sessionStorage.getItem("consulta_anuar_aberta");
+
+if (abriuAgora && !sessionStorage.getItem("consulta_anuar_logado")) {
+    sessionStorage.setItem("consulta_anuar_aberta", "1");
+    supabaseClient.auth.signOut();
+}
 
 
  
@@ -2257,6 +2262,6 @@ async function criarConta() {
     "Conta criada! Verifique seu e-mail para confirmar.";
 }
 
-mostrarLogin();
+
 </script>/body>
 </html>
