@@ -2114,7 +2114,9 @@ const supabaseClient = supabase.createClient(
     }
   }
 );
+<script>
 async function verificarAcesso() {
+  // Sempre começa exigindo login
   await supabaseClient.auth.signOut();
 
   sessionStorage.removeItem("consulta_anuar_logado");
@@ -2124,157 +2126,261 @@ async function verificarAcesso() {
 }
 
 
-    
+function mostrarLogin() {
 
-  document.body.innerHTML = `
-    <div style="
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:#f5f5f5;
-      padding:20px;
-      font-family:Arial,sans-serif;
-    ">
-      <div style="
-        background:white;
-        padding:30px;
-        border-radius:16px;
-        width:100%;
-        max-width:400px;
-        box-shadow:0 5px 25px rgba(0,0,0,.12);
-      ">
-        <h2 style="margin-top:0;text-align:center;">
-          Consulta Anuar
-        </h2>
+  // Evita criar duas telas de login
+  const loginExistente = document.getElementById("telaLoginAnuar");
 
-        <p style="text-align:center;color:#666;">
-          Entre com seu e-mail e senha para acessar.
-        </p>
-
-        <input
-          id="loginEmail"
-          type="email"
-          placeholder="E-mail"
-          style="
-            width:100%;
-            padding:14px;
-            margin:10px 0;
-            border:1px solid #ddd;
-            border-radius:8px;
-            box-sizing:border-box;
-          "
-        >
-
-        <input
-          id="loginPassword"
-          type="password"
-          placeholder="Senha"
-          style="
-            width:100%;
-            padding:14px;
-            margin:10px 0;
-            border:1px solid #ddd;
-            border-radius:8px;
-            box-sizing:border-box;
-          "
-        >
-
-        <button
-          onclick="entrar()"
-          style="
-            width:100%;
-            padding:14px;
-            margin-top:10px;
-            background:#111;
-            color:white;
-            border:0;
-            border-radius:8px;
-            font-size:16px;
-            cursor:pointer;
-          "
-        >
-          Entrar
-        </button>
-
-        <button
-          onclick="criarConta()"
-          style="
-            width:100%;
-            padding:14px;
-            margin-top:10px;
-            background:white;
-            color:#111;
-            border:1px solid #111;
-            border-radius:8px;
-            font-size:16px;
-            cursor:pointer;
-          "
-        >
-          Criar conta
-        </button>
-
-        <p id="loginMensagem"
-           style="text-align:center;margin-top:15px;color:#d00;">
-        </p>
-      </div>
-    </div>
-  `;
-}
-
-async function entrar() {
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
-  const mensagem = document.getElementById("loginMensagem");
-
-  const { error } = await supabaseClient.auth.signInWithPassword({
-    email,
-    password
-  });
-if (error) {
-  mensagem.textContent = "E-mail ou senha incorretos.";
-  return;
-}
-
-const { data: sessao } = await supabaseClient.auth.getSession();
-
-if (sessao.session) {
-  console.log("LOGIN OK - sessão encontrada");
- sessionStorage.setItem("consulta_anuar_logado", "1");
-  location.reload();
-} else {
-  mensagem.textContent = "Login realizado, mas a sessão não foi encontrada.";
-  console.log("ERRO: sessão não encontrada");
-}
-  
-
-async function criarConta() {
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
-  const mensagem = document.getElementById("loginMensagem");
-
-  if (!email || !password) {
-    mensagem.textContent = "Informe e-mail e senha.";
+  if (loginExistente) {
+    loginExistente.style.display = "flex";
     return;
   }
 
-  const { error } = await supabaseClient.auth.signUp({
-    email,
-    password
-  });
+  const telaLogin = document.createElement("div");
+
+  telaLogin.id = "telaLoginAnuar";
+
+  telaLogin.style.cssText = `
+    position:fixed;
+    inset:0;
+    z-index:999999;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#f5f5f5;
+    padding:20px;
+    font-family:Arial,sans-serif;
+    box-sizing:border-box;
+  `;
+
+  telaLogin.innerHTML = `
+    <div style="
+      background:white;
+      padding:30px;
+      border-radius:16px;
+      width:100%;
+      max-width:400px;
+      box-shadow:0 5px 25px rgba(0,0,0,.12);
+      box-sizing:border-box;
+    ">
+
+      <h2 style="
+        margin-top:0;
+        text-align:center;
+      ">
+        Consulta Anuar
+      </h2>
+
+      <p style="
+        text-align:center;
+        color:#666;
+      ">
+        Entre com seu e-mail e senha para acessar.
+      </p>
+
+      <input
+        id="loginEmail"
+        type="email"
+        placeholder="E-mail"
+        style="
+          width:100%;
+          padding:14px;
+          margin:10px 0;
+          border:1px solid #ddd;
+          border-radius:8px;
+          box-sizing:border-box;
+        "
+      >
+
+      <input
+        id="loginPassword"
+        type="password"
+        placeholder="Senha"
+        style="
+          width:100%;
+          padding:14px;
+          margin:10px 0;
+          border:1px solid #ddd;
+          border-radius:8px;
+          box-sizing:border-box;
+        "
+      >
+
+      <button
+        id="botaoEntrar"
+        style="
+          width:100%;
+          padding:14px;
+          margin-top:10px;
+          background:#111;
+          color:white;
+          border:0;
+          border-radius:8px;
+          font-size:16px;
+          cursor:pointer;
+        "
+      >
+        Entrar
+      </button>
+
+      <button
+        id="botaoCriarConta"
+        style="
+          width:100%;
+          padding:14px;
+          margin-top:10px;
+          background:white;
+          color:#111;
+          border:1px solid #111;
+          border-radius:8px;
+          font-size:16px;
+          cursor:pointer;
+        "
+      >
+        Criar conta
+      </button>
+
+      <p
+        id="loginMensagem"
+        style="
+          text-align:center;
+          margin-top:15px;
+          color:#d00;
+        "
+      ></p>
+
+    </div>
+  `;
+
+  document.body.appendChild(telaLogin);
+
+  document
+    .getElementById("botaoEntrar")
+    .addEventListener("click", entrar);
+
+  document
+    .getElementById("botaoCriarConta")
+    .addEventListener("click", criarConta);
+}
+
+
+async function entrar() {
+
+  const email =
+    document.getElementById("loginEmail").value.trim();
+
+  const password =
+    document.getElementById("loginPassword").value;
+
+  const mensagem =
+    document.getElementById("loginMensagem");
+
+  if (!email || !password) {
+    mensagem.style.color = "#d00";
+    mensagem.textContent =
+      "Informe seu e-mail e sua senha.";
+    return;
+  }
+
+  mensagem.textContent = "Entrando...";
+
+  const { error } =
+    await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
 
   if (error) {
-    mensagem.textContent = error.message;
+    mensagem.style.color = "#d00";
+    mensagem.textContent =
+      "E-mail ou senha incorretos.";
+    return;
+  }
+
+  const { data: sessao } =
+    await supabaseClient.auth.getSession();
+
+  if (sessao.session) {
+
+    sessionStorage.setItem(
+      "consulta_anuar_logado",
+      "1"
+    );
+
+    sessionStorage.setItem(
+      "consulta_anuar_aberta",
+      "1"
+    );
+
+    const telaLogin =
+      document.getElementById("telaLoginAnuar");
+
+    if (telaLogin) {
+      telaLogin.remove();
+    }
+
+  } else {
+
+    mensagem.style.color = "#d00";
+
+    mensagem.textContent =
+      "Login realizado, mas a sessão não foi encontrada.";
+  }
+}
+
+
+async function criarConta() {
+
+  const email =
+    document.getElementById("loginEmail").value.trim();
+
+  const password =
+    document.getElementById("loginPassword").value;
+
+  const mensagem =
+    document.getElementById("loginMensagem");
+
+  if (!email || !password) {
+    mensagem.style.color = "#d00";
+    mensagem.textContent =
+      "Informe e-mail e senha.";
+    return;
+  }
+
+  if (password.length < 6) {
+    mensagem.style.color = "#d00";
+    mensagem.textContent =
+      "A senha precisa ter pelo menos 6 caracteres.";
+    return;
+  }
+
+  mensagem.textContent = "Criando conta...";
+
+  const { error } =
+    await supabaseClient.auth.signUp({
+      email,
+      password
+    });
+
+  if (error) {
+    mensagem.style.color = "#d00";
+    mensagem.textContent =
+      error.message;
     return;
   }
 
   mensagem.style.color = "green";
+
   mensagem.textContent =
     "Conta criada! Verifique seu e-mail para confirmar.";
 }
-  verificarAcesso();
 
+
+// ABRE A TELA DE LOGIN ASSIM QUE O SITE CARREGAR
+verificarAcesso();
 
 </script>
-  </body>
+
+</body>
 </html>
