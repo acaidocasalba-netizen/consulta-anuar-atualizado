@@ -2114,10 +2114,27 @@ const supabaseClient = supabase.createClient(
     }
   }
 );
+async function verificarAcesso() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  const entrouAgora = sessionStorage.getItem("consulta_anuar_logado");
+
+  if (entrouAgora === "1") {
+    sessionStorage.removeItem("consulta_anuar_logado");
+    return;
+  }
+
+  if (session) {
+    await supabaseClient.auth.signOut();
+  }
+
+  mostrarLogin();
+}
 
 verificarAcesso();
 
-function mostrarLogin() {
+    
+
   document.body.innerHTML = `
     <div style="
       min-height:100vh;
@@ -2232,6 +2249,7 @@ const { data: sessao } = await supabaseClient.auth.getSession();
 
 if (sessao.session) {
   console.log("LOGIN OK - sessão encontrada");
+ sessionStorage.setItem("consulta_anuar_logado", "1");
   location.reload();
 } else {
   mensagem.textContent = "Login realizado, mas a sessão não foi encontrada.";
