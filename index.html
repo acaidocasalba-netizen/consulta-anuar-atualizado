@@ -2447,6 +2447,8 @@ async function entrar() {
     return;
   }
 
+  localStorage.setItem("consulta_anuar_email", email);
+
   mensagem.textContent = "Entrando...";
 
   const { data, error } =
@@ -2714,31 +2716,54 @@ function carregarFaturamentoAdmin(){if(!ehAdmin())return;supabaseClient.from('pe
 
 async function cadastrarNovoUsuario(){
   if(!ehAdmin()){alert("Acesso restrito ao administrador.");return;}
-  const nome=document.getElementById("novoUsuarioNome").value.trim();
-  const email=document.getElementById("novoUsuarioEmail").value.trim().toLowerCase();
-  const senha=document.getElementById("novoUsuarioSenha").value;
-  const tipo=document.getElementById("novoUsuarioTipo").value;
-  const mensalidade=document.getElementById("novoUsuarioMensalidade").value;
-  const vencimento=document.getElementById("novoUsuarioVencimento").value;
-  const acesso_ativo=document.getElementById("novoUsuarioAcesso").checked;
+  const nome=document.getElementById("novoUsuarioNome")?.value.trim()||"";
+  const email=document.getElementById("novoUsuarioEmail")?.value.trim().toLowerCase()||"";
+  const senha=document.getElementById("novoUsuarioSenha")?.value||"";
+  const tipo=document.getElementById("novoUsuarioTipo")?.value||"salão";
+  const mensalidade=document.getElementById("novoUsuarioMensalidade")?.value||"";
+  const vencimento=document.getElementById("novoUsuarioVencimento")?.value||"";
+  const acesso_ativo=document.getElementById("novoUsuarioAcesso")?.checked===true;
   const msg=document.getElementById("novoUsuarioMensagem");
-  if(!nome||!email||!senha){msg.textContent="Preencha nome, e-mail e senha.";return;}
-  if(senha.length<6){msg.textContent="A senha precisa ter pelo menos 6 caracteres.";return;}
-  msg.textContent="Cadastrando...";
+  if(!msg)return;
+  if(!nome||!email||!senha){msg.style.color="#b00020";msg.textContent="Preencha nome, e-mail e senha.";return;}
+  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)){msg.style.color="#b00020";msg.textContent="Informe um e-mail válido.";return;}
+  if(senha.length<6){msg.style.color="#b00020";msg.textContent="A senha precisa ter pelo menos 6 caracteres.";return;}
+  const valorMensalidade=mensalidade===""?null:Number(String(mensalidade).replace(",","."));
+  if(valorMensalidade!==null && (!Number.isFinite(valorMensalidade)||valorMensalidade<0)){msg.style.color="#b00020";msg.textContent="Mensalidade inválida.";return;}
+  msg.style.color="#555";msg.textContent="Cadastrando usuário...";
+  const botao=document.querySelector('button[onclick="cadastrarNovoUsuario()"]');
+  if(botao){botao.disabled=true;botao.dataset.oldText=botao.textContent;botao.textContent="Cadastrando...";}
   try{
-    const {error}=await supabaseClient.functions.invoke("admin-create-user",{
-      body:{nome,email,senha,tipo,acesso_ativo,mensalidade:mensalidade===""?null:Number(mensalidade),vencimento:vencimento||null}
+    const {data,error}=await supabaseClient.functions.invoke("admin-create-user",{
+      body:{nome,email,senha,tipo,acesso_ativo,mensalidade:valorMensalidade,vencimento:vencimento||null}
     });
-    if(error) throw error;
-    msg.textContent="Usuário cadastrado com sucesso.";
-    ["novoUsuarioNome","novoUsuarioEmail","novoUsuarioSenha","novoUsuarioMensalidade","novoUsuarioVencimento"].forEach(id=>document.getElementById(id).value="");
-    document.getElementById("novoUsuarioAcesso").checked=true;
-    carregarUsuariosAdmin();
+    if(error){
+      let detalhe=error.message||"Não foi possível cadastrar.";
+      try{const body=await error.context?.json?.();if(body?.error)detalhe=body.error;}catch(_e){}
+      throw new Error(detalhe);
+    }
+    if(data?.error)throw new Error(data.error);
+    msg.style.color="#176b31";msg.textContent="Usuário cadastrado com sucesso!";
+    ["novoUsuarioNome","novoUsuarioEmail","novoUsuarioSenha","novoUsuarioMensalidade","novoUsuarioVencimento"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+    const ac=document.getElementById("novoUsuarioAcesso");if(ac)ac.checked=true;
+    await carregarUsuariosAdmin();
+    await atualizarDashboardAdmin();
   }catch(e){
-    console.error(e);
-    msg.textContent="A função segura de cadastro ainda precisa ser configurada no Supabase.";
+    console.error("CADASTRO USUÁRIO:",e);
+    msg.style.color="#b00020";
+    const texto=String(e?.message||e||"");
+    if(/FunctionsHttpError|404|not found|admin-create-user/i.test(texto)){
+      msg.textContent="Cadastro ainda não está conectado ao Supabase. Configure a função admin-create-user no Supabase.";
+    }else if(/already registered|already exists|User already registered/i.test(texto)){
+      msg.textContent="Este e-mail já está cadastrado.";
+    }else{
+      msg.textContent="Não foi possível cadastrar: "+texto;
+    }
+  }finally{
+    if(botao){botao.disabled=false;botao.textContent=botao.dataset.oldText||"Cadastrar usuário";}
   }
 }
+
 /* ================================
    INICIAR
 ================================ */
@@ -2777,26 +2802,34 @@ document.addEventListener("keydown", function(e){
 function gerarPDFFaturamento(){
   if(!Array.isArray(order)||!order.length){alert("Adicione pelo menos um produto antes de gerar o PDF.");return;}
   if(!window.jspdf||!window.jspdf.jsPDF){alert("O gerador de PDF ainda está carregando. Tente novamente.");return;}
-  const {jsPDF}=window.jspdf, doc=new jsPDF({unit:"mm",format:"a4"});
-  const d=getDiscount(), cliente=(document.getElementById("client")?.value||"Cliente").trim()||"Cliente";
-  const data=document.getElementById("date")?.value||"", dataBr=data?data.split("-").reverse().join("/") : new Date().toLocaleDateString("pt-BR");
-  const tabela=table==="salon"?"Salão Bahia":"Distribuidor";
-  const brlPdf=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-  doc.setFontSize(18);doc.text("ANUAR COSMÉTICOS",20,20);
-  doc.setFontSize(13);doc.text("FATURAMENTO / PEDIDO",20,29);
-  doc.setFontSize(10);doc.text("Cliente: "+cliente,20,39);doc.text("Data: "+dataBr,20,46);doc.text("Tabela: "+tabela,20,53);
-  let y=64;doc.text("Produto",20,y);doc.text("Qtd.",125,y);doc.text("Unitário",145,y);doc.text("Total",175,y);y+=7;doc.line(20,y-4,190,y-4);
-  for(const item of order){
-    const qtd=Number(item.qty)||1,unit=Number(item.unit)||0,total=item.unit*qtd;
-    if(y>270){doc.addPage();y=20;}
-    const linhas=doc.splitTextToSize(`${item.name} — Cód. ${item.code}${item.size?" — "+item.size:""}`,98);
-    doc.text(linhas,20,y);doc.text(String(qtd),125,y);doc.text(brlPdf(unit),145,y);doc.text(brlPdf(total),175,y);
-    y+=Math.max(6,linhas.length*5);
-  }
-  if(y>260){doc.addPage();y=20;}
-  y+=5;doc.line(120,y,190,y);y+=8;doc.text("Subtotal: "+brlPdf(d.subtotal),125,y);y+=7;doc.text("Desconto: -"+brlPdf(d.discount),125,y);y+=9;
-  doc.setFontSize(13);doc.text("TOTAL: "+brlPdf(d.total),125,y);y+=15;doc.setFontSize(9);doc.text("Obrigado pela preferência!",20,y);
-  doc.save(`Faturamento_Anuar_${dataBr.replaceAll("/","-")}.pdf`);
+  try{
+    const {jsPDF}=window.jspdf, doc=new jsPDF({unit:"mm",format:"a4"});
+    const d=getDiscount();
+    const cliente=(document.getElementById("client")?.value||"Cliente").trim()||"Cliente";
+    const dataCampo=document.getElementById("date")?.value||"";
+    const dataBr=dataCampo?dataCampo.split("-").reverse().join("/"):new Date().toLocaleDateString("pt-BR");
+    const tabela=table==="salon"?"Salão Bahia":"Distribuidor";
+    const brlPdf=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+
+    doc.setFont("helvetica","bold");doc.setFontSize(18);doc.text("ANUAR COSMÉTICOS",20,20);
+    doc.setFont("helvetica","normal");doc.setFontSize(13);doc.text("FATURAMENTO / PEDIDO",20,29);
+    doc.setFontSize(10);doc.text("Cliente: "+cliente,20,39);doc.text("Data: "+dataBr,20,46);doc.text("Tabela: "+tabela,20,53);
+
+    let y=64;
+    doc.setFont("helvetica","bold");doc.text("Produto",20,y);doc.text("Qtd.",125,y);doc.text("Unitário",145,y);doc.text("Total",175,y);y+=7;doc.line(20,y-4,190,y-4);
+    doc.setFont("helvetica","normal");
+    for(const item of order){
+      const qtd=Math.max(1,Number(item.qty)||1),unit=Number(item.unit)||0,total=unit*qtd;
+      const linhas=doc.splitTextToSize(`${item.name||"Produto"} — Cód. ${item.code||""}${item.size?" — "+item.size:""}`,98);
+      if(y+Math.max(6,linhas.length*5)>270){doc.addPage();y=20;}
+      doc.text(linhas,20,y);doc.text(String(qtd),125,y);doc.text(brlPdf(unit),145,y);doc.text(brlPdf(total),175,y);
+      y+=Math.max(6,linhas.length*5);
+    }
+    if(y>260){doc.addPage();y=20;}
+    y+=5;doc.line(120,y,190,y);y+=8;doc.text("Subtotal: "+brlPdf(d.subtotal),125,y);y+=7;doc.text("Desconto: -"+brlPdf(d.discount),125,y);y+=9;
+    doc.setFont("helvetica","bold");doc.setFontSize(13);doc.text("TOTAL: "+brlPdf(d.total),125,y);y+=15;doc.setFont("helvetica","normal");doc.setFontSize(9);doc.text("Obrigado pela preferência!",20,y);
+    doc.save(`Faturamento_Anuar_${dataBr.replaceAll("/","-")}.pdf`);
+  }catch(e){console.error("PDF:",e);alert("Não foi possível gerar o PDF: "+(e?.message||e));}
 }
 </script>
 
