@@ -6,7 +6,7 @@
 <title>Consulta Anuar</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f4f4;color:#151515}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f4f4;color:#151515}body:not(.auth-ready){visibility:hidden}
 .container{max-width:1000px;margin:auto;padding:18px}
 .header{background:#111;color:#fff;border-radius:14px;padding:22px;margin-bottom:14px}
 .header small{opacity:.75}.header h1{margin:6px 0 4px;font-size:28px}.header p{margin:0;opacity:.8}
@@ -2290,6 +2290,7 @@ function mostrarLogin() {
   `;
 
   document.body.appendChild(tela);
+  document.body.classList.add("auth-ready");
 }
 
 
@@ -2319,14 +2320,15 @@ function liberarSite() {
 
 async function verificarAcesso() {
 
+  // Mostra o login imediatamente para impedir que a tela inicial apareça antes dele.
+  mostrarLogin();
+
   // Para obrigar o login sempre que o site for aberto,
   // encerramos qualquer sessão anterior.
   await supabaseClient.auth.signOut();
 
   sessionStorage.removeItem("consulta_anuar_logado");
   sessionStorage.removeItem("consulta_anuar_aberta");
-
-  mostrarLogin();
 }
 
 
