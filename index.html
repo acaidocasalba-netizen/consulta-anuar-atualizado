@@ -2115,18 +2115,10 @@ const supabaseClient = supabase.createClient(
   }
 );
 async function verificarAcesso() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
+  await supabaseClient.auth.signOut();
 
-  const entrouAgora = sessionStorage.getItem("consulta_anuar_logado");
-
-  if (entrouAgora === "1") {
-    sessionStorage.removeItem("consulta_anuar_logado");
-    return;
-  }
-
-  if (session) {
-    await supabaseClient.auth.signOut();
-  }
+  sessionStorage.removeItem("consulta_anuar_logado");
+  sessionStorage.removeItem("consulta_anuar_aberta");
 
   mostrarLogin();
 }
@@ -2280,8 +2272,9 @@ async function criarConta() {
   mensagem.style.color = "green";
   mensagem.textContent =
     "Conta criada! Verifique seu e-mail para confirmar.";
-}
+}verificarAcesso();
 
 
-</script>/body>
+</script>
+  </body>
 </html>
