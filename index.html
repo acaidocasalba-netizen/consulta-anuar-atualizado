@@ -2366,12 +2366,12 @@ if (erroPerfil) {
   mensagem.textContent = "Não foi possível verificar seu acesso.";
   return;
 }
-
-if (!perfil.acesso_ativo) {
-  mensagem.textContent = "Seu acesso está bloqueado.";
-  await supabaseClient.auth.signOut();
-  return;
+if (erroPerfil) {
+    console.error(erroPerfil);
+    mensagem.textContent = "Erro ao verificar acesso: " + erroPerfil.message;
+    return;
 }
+
 
 sessionStorage.setItem("consulta_anuar_tipo", perfil.tipo);
 
