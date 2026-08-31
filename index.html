@@ -2395,6 +2395,7 @@ if (!perfil || perfil.acesso_ativo !== true) {
 
   sessionStorage.setItem("consulta_anuar_tipo", perfil.tipo || "usuario");
   sessionStorage.setItem("consulta_anuar_admin", perfil.tipo === "admin" ? "1" : "0");
+  sessionStorage.setItem("consulta_anuar_acesso", perfil.acesso_ativo === true ? "1" : "0");
 
   liberarSite();
   configurarMenuAdmin(perfil);
