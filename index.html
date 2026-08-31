@@ -20,6 +20,24 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
 .summary{background:#fafafa;border:1px solid #ddd;border-radius:10px;padding:12px;margin-top:10px}.summary-line{display:flex;justify-content:space-between;padding:5px 0}.summary-line.discount{color:#b00020}.summary-line.total{font-size:20px;font-weight:800;border-top:2px solid #111;margin-top:7px;padding-top:12px}
 .discount-grid{display:grid;grid-template-columns:130px 1fr;gap:8px;margin-top:10px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.hidden{display:none}.empty{text-align:center;color:#777;padding:18px}.badge{display:inline-block;background:#eee;border-radius:20px;padding:4px 8px;font-size:11px;margin-top:4px}
 @media(max-width:650px){.searchrow{grid-template-columns:1fr}.product{grid-template-columns:1fr}.product button{width:100%}.order-row{grid-template-columns:1fr 55px 85px 34px}.actions{grid-template-columns:1fr}.discount-grid{grid-template-columns:1fr}}
+
+/* ===== PAINEL ADMINISTRATIVO ===== */
+.admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000000;overflow:auto;padding:18px}
+.admin-panel{max-width:1100px;margin:0 auto;background:#f4f4f4;border-radius:18px;min-height:calc(100vh - 36px);box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden}
+.admin-top{background:#111;color:#fff;padding:22px;display:flex;justify-content:space-between;align-items:center;gap:15px;position:sticky;top:0;z-index:2}
+.admin-top h2{margin:0;font-size:24px}.admin-top p{margin:5px 0 0;opacity:.75}
+.admin-close{background:#fff;color:#111;border-radius:10px;padding:10px 14px}
+.admin-body{padding:18px}.admin-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+.admin-stat{background:#fff;border:1px solid #ddd;border-radius:14px;padding:15px}.admin-stat strong{display:block;font-size:24px;margin-top:5px}.admin-stat small{color:#777}
+.admin-nav{display:flex;gap:8px;overflow:auto;margin-bottom:14px}.admin-nav button{white-space:nowrap}.admin-nav .active{background:#111;color:#fff}
+.admin-section{display:none}.admin-section.active{display:block}.admin-card{background:#fff;border:1px solid #ddd;border-radius:14px;padding:16px;margin-bottom:14px}
+.admin-table-wrap{overflow:auto}.admin-table{width:100%;border-collapse:collapse;min-width:720px}.admin-table th,.admin-table td{padding:10px;border-bottom:1px solid #eee;text-align:left;font-size:13px;vertical-align:middle}.admin-table th{background:#fafafa}
+.admin-actions{display:flex;gap:6px;flex-wrap:wrap}.admin-actions button{padding:8px 10px}.admin-badge{display:inline-block;border-radius:20px;padding:4px 8px;font-size:11px;background:#eee}.admin-badge.ok{background:#e7f7ec;color:#176b31}.admin-badge.block{background:#fdeaea;color:#9b1c1c}
+.admin-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.admin-form-grid .full{grid-column:1/-1}
+.admin-product-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.admin-product{border:1px solid #ddd;border-radius:12px;padding:12px}.admin-product b{display:block;margin-bottom:4px}.admin-muted{color:#777;font-size:13px}.admin-empty{text-align:center;color:#777;padding:25px}
+@media(max-width:700px){.admin-grid{grid-template-columns:repeat(2,1fr)}.admin-form-grid,.admin-product-list{grid-template-columns:1fr}.admin-top{position:relative}.admin-body{padding:12px}}
+
+.admin-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.admin-edit-grid .full{grid-column:1/-1}.admin-danger{background:#b00020;color:#fff}.admin-warning{background:#fff4d6;color:#7a5200;border:1px solid #e7c66b}.admin-success{background:#e7f7ec;color:#176b31;border:1px solid #b8dfc3}.admin-kpi{font-size:26px;font-weight:800}.admin-filter{display:grid;grid-template-columns:1fr 180px;gap:8px;margin-bottom:10px}.admin-table input,.admin-table select{min-width:110px;padding:8px}.admin-table .mini{padding:7px 9px;font-size:12px}.admin-pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eee;font-size:11px}.admin-pill.due{background:#fff4d6;color:#7a5200}.admin-pill.overdue{background:#fdeaea;color:#9b1c1c}.admin-pill.paid{background:#e7f7ec;color:#176b31}@media(max-width:700px){.admin-edit-grid,.admin-filter{grid-template-columns:1fr}.admin-edit-grid .full{grid-column:auto}}
 </style>
 </head>
 <body>
@@ -41,7 +59,7 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
     <a href="#">📋 Pedidos</a>
     <a href="#">👤 Minha conta</a>
 
-   <a href="#" id="menuAdmin" style="display:none;">👑 Administração</a>
+   <a href="#" id="menuAdmin" style="display:none;" onclick="abrirAdministracao();return false;">👑 Administração</a>
 </div>
   <div class="tabs">
     <button id="tabDist" class="tab active" onclick="setTable('dist')">Distribuidor</button>
@@ -2106,7 +2124,7 @@ function changeQty(i,v){order[i].qty=Math.max(1,parseInt(v)||1);renderOrder()}
 function removeItem(i){order.splice(i,1);renderOrder()}
 function clearOrder(){order=[];document.getElementById('discountValue').value=0;renderOrder();document.getElementById('invoiceCard').classList.add('hidden')}
 function invoiceMessage(){const client=document.getElementById('client').value.trim()||'Cliente',date=document.getElementById('date').value,dateBr=date?date.split('-').reverse().join('/'):'',d=getDiscount();let text=`ANUAR COSMÉTICOS\nFATURAMENTO / PEDIDO\n\nCliente: ${client}\nData: ${dateBr}\nTabela: ${table==='salon'?'Salão Bahia':'Distribuidor'}\n\n`;order.forEach(x=>text+=`${x.qty}x ${x.name} - ${brl(x.unit)} = ${brl(x.unit*x.qty)}\nCódigo: ${x.code}\n`);text+=`\nSUBTOTAL: ${brl(d.subtotal)}\nDESCONTO: -${brl(d.discount)}\nTOTAL: ${brl(d.total)}\n\nObrigado pela preferência!`;return text}
-function generateInvoice(){if(!order.length){alert('Adicione pelo menos um produto.');return}document.getElementById('invoiceText').value=invoiceMessage();document.getElementById('invoiceCard').classList.remove('hidden');document.getElementById('invoiceCard').scrollIntoView({behavior:'smooth'})}
+function generateInvoice(){if(!order.length){alert('Adicione pelo menos um produto.');return}try{registrarPedidoAdmin()}catch(e){console.error(e)}document.getElementById('invoiceText').value=invoiceMessage();document.getElementById('invoiceCard').classList.remove('hidden');document.getElementById('invoiceCard').scrollIntoView({behavior:'smooth'})}
 async function copyInvoice(){const text=document.getElementById('invoiceText').value;try{await navigator.clipboard.writeText(text);alert('Faturamento copiado!')}catch(e){document.getElementById('invoiceText').select();document.execCommand('copy');alert('Faturamento copiado!')}}
 function sendWhatsApp(){if(!order.length){alert('Adicione pelo menos um produto.');return}window.open('https://wa.me/?text='+encodeURIComponent(invoiceMessage()),'_blank')}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
@@ -2369,9 +2387,17 @@ if (erroPerfil) {
 }
 
 
-sessionStorage.setItem("consulta_anuar_tipo", perfil.tipo);
+if (!perfil || perfil.acesso_ativo !== true) {
+    await supabaseClient.auth.signOut();
+    mensagem.textContent = "Seu acesso está bloqueado. Procure o administrador.";
+    return;
+  }
 
-liberarSite();
+  sessionStorage.setItem("consulta_anuar_tipo", perfil.tipo || "usuario");
+  sessionStorage.setItem("consulta_anuar_admin", perfil.tipo === "admin" ? "1" : "0");
+
+  liberarSite();
+  configurarMenuAdmin(perfil);
   
 }
 
@@ -2428,8 +2454,152 @@ async function criarConta() {
 
 
 /* ================================
+   PAINEL ADMINISTRATIVO
+================================ */
+
+let adminPerfilAtual = null;
+let adminAbaAtual = "dashboard";
+
+function ehAdmin() {
+  return sessionStorage.getItem("consulta_anuar_admin") === "1" &&
+         sessionStorage.getItem("consulta_anuar_tipo") === "admin" &&
+         sessionStorage.getItem("consulta_anuar_acesso") === "1";
+}
+
+function configurarMenuAdmin(perfil) {
+  adminPerfilAtual = perfil || null;
+  const menu = document.getElementById("menuAdmin");
+  if (!menu) return;
+  const podeAdministrar = !!(perfil && perfil.tipo === "admin" && perfil.acesso_ativo === true);
+  menu.style.display = podeAdministrar ? "block" : "none";
+  menu.onclick = function(e){ if(e)e.preventDefault(); abrirAdministracao(); };
+}
+
+function fecharAdministracao(){ document.getElementById("adminOverlay")?.remove(); document.getElementById("adminEditModal")?.remove(); }
+
+function adminAba(nome){
+  if(!ehAdmin()) return;
+  adminAbaAtual=nome;
+  document.querySelectorAll(".admin-nav button").forEach(b=>b.classList.toggle("active",b.dataset.aba===nome));
+  document.querySelectorAll(".admin-section").forEach(s=>s.classList.toggle("active",s.dataset.section===nome));
+  if(nome==='dashboard') atualizarDashboardAdmin();
+  if(nome==='usuarios') carregarUsuariosAdmin();
+  if(nome==='produtos') carregarProdutosAdmin();
+  if(nome==='pedidos') carregarPedidosAdmin();
+  if(nome==='faturamento') carregarFaturamentoAdmin();
+}
+
+function abrirAdministracao(){
+  if(!ehAdmin()){ alert('Acesso restrito ao administrador.'); return; }
+  fecharMenu();
+  if(document.getElementById('adminOverlay')){adminAba('dashboard');return;}
+  const overlay=document.createElement('div');
+  overlay.id='adminOverlay'; overlay.className='admin-overlay';
+  overlay.innerHTML=`
+  <div class="admin-panel">
+    <div class="admin-top"><div><h2>👑 PAINEL ADMINISTRATIVO</h2><p>Olá, Administrador 👋</p></div><button class="admin-close" onclick="fecharAdministracao()">Fechar</button></div>
+    <div class="admin-body">
+      <div class="admin-grid">
+        <div class="admin-stat"><small>👥 Usuários</small><strong id="adminStatUsuarios">—</strong></div>
+        <div class="admin-stat"><small>✅ Ativos</small><strong id="adminStatAtivos">—</strong></div>
+        <div class="admin-stat"><small>🚫 Bloqueados</small><strong id="adminStatBloqueados">—</strong></div>
+        <div class="admin-stat"><small>📦 Produtos</small><strong>${products.length}</strong></div>
+        <div class="admin-stat"><small>💰 Mensalidades</small><strong id="adminStatMensalidades">—</strong></div>
+        <div class="admin-stat"><small>⚠️ Vencidos</small><strong id="adminStatVencidos">—</strong></div>
+      </div>
+      <div class="admin-nav">
+        <button class="secondary active" data-aba="dashboard" onclick="adminAba('dashboard')">📊 Dashboard</button>
+        <button class="secondary" data-aba="usuarios" onclick="adminAba('usuarios')">👥 Usuários</button>
+        <button class="secondary" data-aba="produtos" onclick="adminAba('produtos')">📦 Produtos</button>
+        <button class="secondary" data-aba="pedidos" onclick="adminAba('pedidos')">🧾 Pedidos</button>
+        <button class="secondary" data-aba="faturamento" onclick="adminAba('faturamento')">💰 Faturamento</button>
+      </div>
+      <section class="admin-section active" data-section="dashboard">
+        <div class="admin-card"><h3>📊 Resumo</h3><p class="admin-muted">Visão geral da administração da Consulta Anuar.</p><div id="adminDashboardResumo"></div></div>
+        <div class="admin-card"><h3>🔐 Área exclusiva</h3><p class="admin-muted">A Administração só é aberta quando o perfil autenticado é <b>admin</b> e está com acesso ativo. As operações do painel também verificam essa condição.</p></div>
+      </section>
+      <section class="admin-section" data-section="usuarios">
+        <div class="admin-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">👥 Gerenciar usuários</h3><p class="admin-muted">Nome, e-mail, tipo, acesso, mensalidade e vencimento.</p></div><button class="primary" onclick="carregarUsuariosAdmin()">Atualizar</button></div><div class="admin-filter" style="margin-top:10px"><input id="adminUsuarioBusca" placeholder="Pesquisar por nome ou e-mail" oninput="carregarUsuariosAdmin()"><select id="adminUsuarioFiltro" onchange="carregarUsuariosAdmin()"><option value="todos">Todos</option><option value="admin">Administradores</option><option value="distribuidor">Distribuidores</option><option value="salão">Salões</option><option value="bloqueado">Bloqueados</option></select></div><div id="adminUsuariosMsg" class="admin-muted"></div></div>
+        <div class="admin-card"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Tipo</th><th>Acesso</th><th>Mensalidade</th><th>Vencimento</th><th>Ações</th></tr></thead><tbody id="adminUsuariosBody"><tr><td colspan="7" class="admin-empty">Carregando...</td></tr></tbody></table></div></div>
+      </section>
+      <section class="admin-section" data-section="produtos">
+        <div class="admin-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">📦 Gerenciar produtos</h3><p class="admin-muted">Código, nome, categoria, preços e ativo/inativo.</p></div><button class="primary" onclick="novoProdutoAdmin()">➕ Cadastrar produto</button></div><input id="adminProdutoBusca" placeholder="Pesquisar produto, código ou categoria" oninput="carregarProdutosAdmin()" style="margin-top:10px"></div>
+        <div class="admin-card"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Código</th><th>Nome</th><th>Categoria</th><th>Distribuidor</th><th>Salão Bahia</th><th>Status</th><th>Ações</th></tr></thead><tbody id="adminProdutosBody"></tbody></table></div></div>
+      </section>
+      <section class="admin-section" data-section="pedidos">
+        <div class="admin-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">🧾 Pedidos</h3><p class="admin-muted">Cliente, data, produtos, desconto, total e status.</p></div><button class="primary" onclick="carregarPedidosAdmin()">Atualizar</button></div><div class="admin-filter" style="margin-top:10px"><input id="adminPedidoBusca" placeholder="Pesquisar cliente ou data" oninput="carregarPedidosAdmin()"><select id="adminPedidoStatus" onchange="carregarPedidosAdmin()"><option value="todos">Todos os status</option><option value="pendente">Pendente</option><option value="processando">Processando</option><option value="concluido">Concluído</option><option value="cancelado">Cancelado</option></select></div></div>
+        <div class="admin-card"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Cliente</th><th>Data</th><th>Produtos</th><th>Desconto</th><th>Total</th><th>Status</th><th>Ações</th></tr></thead><tbody id="adminPedidosBody"></tbody></table></div></div>
+      </section>
+      <section class="admin-section" data-section="faturamento">
+        <div class="admin-card"><h3>💰 Controle administrativo</h3><p class="admin-muted">Mensalidades, vencimentos e usuários inadimplentes/bloqueados.</p><div class="admin-grid"><div class="admin-stat"><small>Mensalidades cadastradas</small><strong id="fatTotal">—</strong></div><div class="admin-stat"><small>Em atraso</small><strong id="fatAtrasadas">—</strong></div><div class="admin-stat"><small>Bloqueados</small><strong id="fatBloqueados">—</strong></div></div></div>
+        <div class="admin-card"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Usuário</th><th>Mensalidade</th><th>Vencimento</th><th>Situação</th><th>Ação</th></tr></thead><tbody id="adminFaturamentoBody"></tbody></table></div></div>
+      </section>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay); adminAba('dashboard');
+}
+
+function formatarDataAdmin(v){if(!v)return '—';const p=String(v).slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:v;}
+function vencimentoStatus(v,ativo=true){if(!v)return ativo?'Sem vencimento':'Bloqueado';const d=new Date(String(v).slice(0,10)+'T23:59:59');const hoje=new Date();const diff=Math.ceil((d-hoje)/86400000);if(!ativo)return 'Bloqueado';if(diff<0)return 'Inadimplente';if(diff<=7)return 'Vence em breve';return 'Em dia';}
+function statusClass(st){return st==='Inadimplente'?'overdue':(st==='Em dia'?'paid':'due');}
+
+async function atualizarDashboardAdmin(){
+  if(!ehAdmin())return;
+  const {data,error}=await supabaseClient.from('perfis').select('id,tipo,acesso_ativo,mensalidade,vencimento');
+  if(error){console.error(error);return;}
+  const ativos=data.filter(x=>x.acesso_ativo===true).length, bloqueados=data.length-ativos;
+  const mensalidades=data.reduce((s,x)=>s+(Number(x.mensalidade)||0),0), vencidos=data.filter(x=>vencimentoStatus(x.vencimento,x.acesso_ativo)==='Inadimplente').length;
+  document.getElementById('adminStatUsuarios').textContent=data.length;
+  document.getElementById('adminStatAtivos').textContent=ativos;
+  document.getElementById('adminStatBloqueados').textContent=bloqueados;
+  document.getElementById('adminStatMensalidades').textContent=brl(mensalidades);
+  document.getElementById('adminStatVencidos').textContent=vencidos;
+  document.getElementById('adminDashboardResumo').innerHTML=`<p><b>${ativos}</b> usuários ativos, <b>${bloqueados}</b> bloqueados e <b>${vencidos}</b> com vencimento em atraso.</p>`;
+}
+
+async function carregarUsuariosAdmin(){
+  if(!ehAdmin())return; const body=document.getElementById('adminUsuariosBody'); if(!body)return;
+  body.innerHTML='<tr><td colspan="7" class="admin-empty">Carregando...</td></tr>';
+  const {data,error}=await supabaseClient.from('perfis').select('id,nome,email,tipo,acesso_ativo,mensalidade,vencimento,criado_em').order('criado_em',{ascending:false});
+  if(error){body.innerHTML=`<tr><td colspan="7" class="admin-empty">${esc(error.message||'Erro ao carregar usuários.')}</td></tr>`;return;}
+  const q=(document.getElementById('adminUsuarioBusca')?.value||'').toLowerCase().trim(), filtro=document.getElementById('adminUsuarioFiltro')?.value||'todos';
+  const list=data.filter(u=>{const hay=`${u.nome||''} ${u.email||''}`.toLowerCase(); if(q&&!hay.includes(q))return false; if(filtro==='bloqueado')return !u.acesso_ativo; if(['admin','distribuidor','salão'].includes(filtro))return u.tipo===filtro; return true;});
+  body.innerHTML=list.length?list.map(u=>`<tr><td>${esc(u.nome||'—')}</td><td>${esc(u.email||'—')}</td><td><select onchange="alterarTipoAdmin('${u.id}',this.value)"><option ${u.tipo==='admin'?'selected':''} value="admin">admin</option><option ${u.tipo==='distribuidor'?'selected':''} value="distribuidor">distribuidor</option><option ${u.tipo==='salão'?'selected':''} value="salão">salão</option></select></td><td><span class="admin-badge ${u.acesso_ativo?'ok':'block'}">${u.acesso_ativo?'Ativo':'Bloqueado'}</span></td><td>${u.mensalidade==null?'—':brl(u.mensalidade)}</td><td><span class="admin-pill ${statusClass(vencimentoStatus(u.vencimento,u.acesso_ativo))}">${formatarDataAdmin(u.vencimento)}</span></td><td><div class="admin-actions"><button class="secondary mini" onclick='editarPerfilAdmin(${JSON.stringify(u)})'>Editar</button><button class="${u.acesso_ativo?'secondary':'green'} mini" onclick="alternarAcessoAdmin('${u.id}',${u.acesso_ativo?'false':'true'})">${u.acesso_ativo?'Bloquear':'Liberar'}</button></div></td></tr>`).join(''):'<tr><td colspan="7" class="admin-empty">Nenhum usuário encontrado.</td></tr>';
+  atualizarDashboardAdmin();
+}
+
+async function alternarAcessoAdmin(id,ativo){if(!ehAdmin())return;if(!confirm(ativo?'Liberar o acesso deste usuário?':'Bloquear o acesso deste usuário?'))return;const {error}=await supabaseClient.from('perfis').update({acesso_ativo:ativo}).eq('id',id);if(error){alert('Erro: '+error.message);return}carregarUsuariosAdmin();}
+async function alterarTipoAdmin(id,tipo){if(!ehAdmin())return;const {error}=await supabaseClient.from('perfis').update({tipo}).eq('id',id);if(error){alert('Não foi possível alterar o tipo: '+error.message);carregarUsuariosAdmin();return}sessionStorage.setItem('consulta_anuar_tipo',sessionStorage.getItem('consulta_anuar_tipo')||'admin');carregarUsuariosAdmin();}
+
+function editarPerfilAdmin(u){
+  if(!ehAdmin())return; document.getElementById('adminEditModal')?.remove();
+  const modal=document.createElement('div');modal.id='adminEditModal';modal.className='admin-overlay';
+  modal.innerHTML=`<div class="admin-panel" style="max-width:700px;min-height:auto;margin-top:25px"><div class="admin-top"><div><h2>👤 Editar usuário</h2><p>${esc(u.email||'')}</p></div><button class="admin-close" onclick="document.getElementById('adminEditModal').remove()">Fechar</button></div><div class="admin-body"><div class="admin-card"><div class="admin-edit-grid"><div><label>Nome</label><input id="admNome" value="${esc(u.nome||'')}"></div><div><label>E-mail</label><input value="${esc(u.email||'')}" disabled></div><div><label>Tipo</label><select id="admTipo"><option value="admin">admin</option><option value="distribuidor">distribuidor</option><option value="salão">salão</option></select></div><div><label>Acesso</label><select id="admAcesso"><option value="true">Ativo</option><option value="false">Bloqueado</option></select></div><div><label>Mensalidade</label><input id="admMensalidade" type="number" min="0" step="0.01" value="${u.mensalidade??''}"></div><div><label>Vencimento</label><input id="admVencimento" type="date" value="${u.vencimento?String(u.vencimento).slice(0,10):''}"></div></div><button class="primary" style="width:100%;margin-top:12px" onclick="salvarPerfilAdmin('${u.id}')">Salvar alterações</button></div></div></div>`;
+  document.body.appendChild(modal);document.getElementById('admTipo').value=u.tipo||'usuario';document.getElementById('admAcesso').value=u.acesso_ativo?'true':'false';
+}
+async function salvarPerfilAdmin(id){if(!ehAdmin())return;const payload={nome:document.getElementById('admNome').value.trim(),tipo:document.getElementById('admTipo').value,acesso_ativo:document.getElementById('admAcesso').value==='true',mensalidade:document.getElementById('admMensalidade').value===''?null:Number(document.getElementById('admMensalidade').value),vencimento:document.getElementById('admVencimento').value||null};const {error}=await supabaseClient.from('perfis').update(payload).eq('id',id);if(error){alert('Não foi possível salvar: '+error.message);return}document.getElementById('adminEditModal')?.remove();carregarUsuariosAdmin();alert('Usuário atualizado com sucesso.');}
+
+function getAdminProducts(){try{return JSON.parse(localStorage.getItem('consulta_anuar_admin_products')||'null')||products.map(p=>({...p,category:p.category||'Sem categoria',active:true}));}catch(e){return products.map(p=>({...p,category:p.category||'Sem categoria',active:true}));}}
+function saveAdminProducts(list){localStorage.setItem('consulta_anuar_admin_products',JSON.stringify(list));}
+function carregarProdutosAdmin(){if(!ehAdmin())return;const body=document.getElementById('adminProdutosBody');if(!body)return;const q=(document.getElementById('adminProdutoBusca')?.value||'').toLowerCase().trim();const list=getAdminProducts().filter(p=>!q||`${p.code} ${p.name} ${p.size||''} ${p.category||''}`.toLowerCase().includes(q));body.innerHTML=list.length?list.map(p=>`<tr><td>${esc(p.code||'')}</td><td>${esc(p.name||'')}<div class="admin-muted">${esc(p.size||'')}</div></td><td>${esc(p.category||'Sem categoria')}</td><td>${brl(p.price)}</td><td>${p.salonPrice==null?'—':brl(p.salonPrice)}</td><td><span class="admin-badge ${p.active!==false?'ok':'block'}">${p.active!==false?'Ativo':'Inativo'}</span></td><td><div class="admin-actions"><button class="secondary mini" onclick='editarProdutoAdmin(${JSON.stringify(p)})'>Editar</button><button class="${p.active!==false?'secondary':'green'} mini" onclick="alternarProdutoAdmin('${p.id}')">${p.active!==false?'Desativar':'Ativar'}</button><button class="admin-danger mini" onclick="excluirProdutoAdmin('${p.id}')">Excluir</button></div></td></tr>`).join(''):'<tr><td colspan="7" class="admin-empty">Nenhum produto encontrado.</td></tr>';}
+function novoProdutoAdmin(){editarProdutoAdmin({id:'novo-'+Date.now(),code:'',name:'',size:'',category:'',price:0,salonPrice:null,active:true,isNew:true});}
+function editarProdutoAdmin(p){if(!ehAdmin())return;document.getElementById('adminEditProduto')?.remove();const m=document.createElement('div');m.id='adminEditProduto';m.className='admin-overlay';m.innerHTML=`<div class="admin-panel" style="max-width:650px;min-height:auto;margin-top:25px"><div class="admin-top"><div><h2>📦 ${p.isNew?'Cadastrar':'Editar'} produto</h2></div><button class="admin-close" onclick="this.closest('.admin-overlay').remove()">Fechar</button></div><div class="admin-body"><div class="admin-card"><div class="admin-edit-grid"><div><label>Código</label><input id="apCode" value="${esc(p.code||'')}"></div><div><label>Categoria</label><input id="apCat" value="${esc(p.category||'')}"></div><div class="full"><label>Nome</label><input id="apName" value="${esc(p.name||'')}"></div><div><label>Tamanho</label><input id="apSize" value="${esc(p.size||'')}"></div><div><label>Preço Distribuidor</label><input id="apPrice" type="number" step="0.01" min="0" value="${p.price??0}"></div><div><label>Preço Salão Bahia</label><input id="apSalon" type="number" step="0.01" min="0" value="${p.salonPrice??''}"></div><div><label>Status</label><select id="apActive"><option value="true">Ativo</option><option value="false">Inativo</option></select></div></div><button class="primary" style="width:100%;margin-top:12px" onclick="salvarProdutoAdmin('${p.id}',${p.isNew?'true':'false'})">Salvar produto</button></div></div></div>`;document.body.appendChild(m);document.getElementById('apActive').value=p.active===false?'false':'true';}
+function salvarProdutoAdmin(id,isNew){if(!ehAdmin())return;const list=getAdminProducts();const obj={id:isNew?'prod-'+Date.now():id,code:document.getElementById('apCode').value.trim(),name:document.getElementById('apName').value.trim(),size:document.getElementById('apSize').value.trim(),category:document.getElementById('apCat').value.trim()||'Sem categoria',price:Number(document.getElementById('apPrice').value)||0,salonPrice:document.getElementById('apSalon').value===''?null:Number(document.getElementById('apSalon').value),active:document.getElementById('apActive').value==='true'};if(!obj.code||!obj.name){alert('Informe código e nome.');return}const i=list.findIndex(x=>x.id===id);if(isNew||i<0)list.push(obj);else list[i]=obj;saveAdminProducts(list);document.getElementById('adminEditProduto')?.remove();carregarProdutosAdmin();alert('Produto salvo neste navegador.');}
+function alternarProdutoAdmin(id){if(!ehAdmin())return;const list=getAdminProducts();const p=list.find(x=>x.id===id);if(!p)return;p.active=p.active===false;saveAdminProducts(list);carregarProdutosAdmin();}
+function excluirProdutoAdmin(id){if(!ehAdmin())return;if(!confirm('Excluir este produto do catálogo administrativo?'))return;saveAdminProducts(getAdminProducts().filter(p=>p.id!==id));carregarProdutosAdmin();}
+
+function getAdminOrders(){try{return JSON.parse(localStorage.getItem('consulta_anuar_pedidos')||'[]');}catch(e){return[]}}
+function saveAdminOrders(v){localStorage.setItem('consulta_anuar_pedidos',JSON.stringify(v));}
+function registrarPedidoAdmin(){if(!order.length)return null;const d=getDiscount();const pedido={id:'PED-'+Date.now(),cliente:document.getElementById('client').value.trim()||'Cliente',data:document.getElementById('date').value||new Date().toISOString().slice(0,10),produtos:order.map(x=>({id:x.id,code:x.code,name:x.name,qty:x.qty,unit:x.unit,table:x.table})),desconto:d.discount,total:d.total,status:'pendente'};const pedidos=getAdminOrders();pedidos.unshift(pedido);saveAdminOrders(pedidos);return pedido;}
+function carregarPedidosAdmin(){if(!ehAdmin())return;const body=document.getElementById('adminPedidosBody');if(!body)return;const q=(document.getElementById('adminPedidoBusca')?.value||'').toLowerCase().trim(),f=document.getElementById('adminPedidoStatus')?.value||'todos';const list=getAdminOrders().filter(p=>(!q||`${p.cliente} ${p.data}`.toLowerCase().includes(q))&&(f==='todos'||p.status===f));body.innerHTML=list.length?list.map(p=>`<tr><td>${esc(p.cliente)}</td><td>${formatarDataAdmin(p.data)}</td><td>${p.produtos?.reduce((s,x)=>s+x.qty,0)||0} item(s)</td><td>${brl(p.desconto||0)}</td><td>${brl(p.total||0)}</td><td><select onchange="alterarStatusPedidoAdmin('${p.id}',this.value)"><option value="pendente" ${p.status==='pendente'?'selected':''}>Pendente</option><option value="processando" ${p.status==='processando'?'selected':''}>Processando</option><option value="concluido" ${p.status==='concluido'?'selected':''}>Concluído</option><option value="cancelado" ${p.status==='cancelado'?'selected':''}>Cancelado</option></select></td><td><button class="admin-danger mini" onclick="excluirPedidoAdmin('${p.id}')">Excluir</button></td></tr>`).join(''):'<tr><td colspan="7" class="admin-empty">Nenhum pedido registrado neste navegador.</td></tr>';}
+function alterarStatusPedidoAdmin(id,status){const l=getAdminOrders();const p=l.find(x=>x.id===id);if(p){p.status=status;saveAdminOrders(l);carregarPedidosAdmin();}}
+function excluirPedidoAdmin(id){if(!confirm('Excluir este pedido?'))return;saveAdminOrders(getAdminOrders().filter(x=>x.id!==id));carregarPedidosAdmin();}
+function carregarFaturamentoAdmin(){if(!ehAdmin())return;supabaseClient.from('perfis').select('id,nome,email,mensalidade,vencimento,acesso_ativo').then(({data,error})=>{const body=document.getElementById('adminFaturamentoBody');if(error||!body){return}const rows=data.filter(u=>u.mensalidade!=null||u.vencimento);const atras=rows.filter(u=>vencimentoStatus(u.vencimento,u.acesso_ativo)==='Inadimplente').length;document.getElementById('fatTotal').textContent=rows.length;document.getElementById('fatAtrasadas').textContent=atras;document.getElementById('fatBloqueados').textContent=data.filter(u=>!u.acesso_ativo).length;body.innerHTML=rows.length?rows.map(u=>{const st=vencimentoStatus(u.vencimento,u.acesso_ativo);return `<tr><td>${esc(u.nome||u.email||'—')}</td><td>${brl(u.mensalidade||0)}</td><td>${formatarDataAdmin(u.vencimento)}</td><td><span class="admin-pill ${statusClass(st)}">${st}</span></td><td><button class="secondary mini" onclick='editarPerfilAdmin(${JSON.stringify(u)})'>Editar</button></td></tr>`}).join(''):'<tr><td colspan="5" class="admin-empty">Nenhuma mensalidade cadastrada.</td></tr>';});}
+
+/* ================================
    INICIAR
 ================================ */
+
 
 verificarAcesso();
   function abrirMenu() {
