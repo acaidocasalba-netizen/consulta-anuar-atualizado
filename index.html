@@ -2734,7 +2734,11 @@ async function cadastrarNovoUsuario(){
   const botao=document.querySelector('button[onclick="cadastrarNovoUsuario()"]');
   if(botao){botao.disabled=true;botao.dataset.oldText=botao.textContent;botao.textContent="Cadastrando...";}
   try{
+    const {data: sessaoData}=await supabaseClient.auth.getSession();
+    const accessToken=sessaoData?.session?.access_token;
+    if(!accessToken) throw new Error("Sessão administrativa não encontrada. Entre novamente como administrador.");
     const {data,error}=await supabaseClient.functions.invoke("cadastrar-usuario",{
+      headers:{Authorization:`Bearer ${accessToken}`},
       body:{nome,email,senha,tipo,acesso_ativo,mensalidade:valorMensalidade,vencimento:vencimento||null}
     });
     if(error){
