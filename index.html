@@ -2726,7 +2726,7 @@ async function cadastrarNovoUsuario(){
   const msg=document.getElementById("novoUsuarioMensagem");
   if(!msg)return;
   if(!nome||!email||!senha){msg.style.color="#b00020";msg.textContent="Preencha nome, e-mail e senha.";return;}
-  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)){msg.style.color="#b00020";msg.textContent="Informe um e-mail válido.";return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg.style.color="#b00020";msg.textContent="Informe um e-mail válido.";return;}
   if(senha.length<6){msg.style.color="#b00020";msg.textContent="A senha precisa ter pelo menos 6 caracteres.";return;}
   const valorMensalidade=mensalidade===""?null:Number(String(mensalidade).replace(",","."));
   if(valorMensalidade!==null && (!Number.isFinite(valorMensalidade)||valorMensalidade<0)){msg.style.color="#b00020";msg.textContent="Mensalidade inválida.";return;}
