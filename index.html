@@ -2624,7 +2624,7 @@ function abrirAdministracao(){
       <section class="admin-section" data-section="usuarios">
         <div class="admin-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">👥 Gerenciar usuários</h3><p class="admin-muted">Nome, e-mail, tipo, acesso, mensalidade e vencimento.</p></div><button class="primary" onclick="carregarUsuariosAdmin()">Atualizar</button></div><div class="admin-filter" style="margin-top:10px"><input id="adminUsuarioBusca" placeholder="Pesquisar por nome ou e-mail" oninput="carregarUsuariosAdmin()"><select id="adminUsuarioFiltro" onchange="carregarUsuariosAdmin()"><option value="todos">Todos</option><option value="admin">Administradores</option><option value="distribuidor">Distribuidores</option><option value="salão">Salões</option><option value="bloqueado">Bloqueados</option></select></div><div id="adminUsuariosMsg" class="admin-muted"></div></div><div class="admin-card" style="margin-top:12px">
 <h3 style="margin-top:0">➕ Cadastrar novo usuário</h3>
-<p class="admin-muted">Crie o acesso e o perfil do novo usuário.</p>
+<p class="admin-muted">Crie o acesso diretamente pelo Supabase Auth, sem usar Edge Function. A sessão do administrador é restaurada automaticamente após o cadastro.</p>
 <div class="admin-edit-grid">
 <div><label>Nome</label><input id="novoUsuarioNome" type="text" placeholder="Nome completo"></div>
 <div><label>E-mail</label><input id="novoUsuarioEmail" type="email" placeholder="E-mail"></div>
@@ -2726,24 +2726,64 @@ async function cadastrarNovoUsuario(){
   const msg=document.getElementById("novoUsuarioMensagem");
   if(!msg)return;
   if(!nome||!email||!senha){msg.style.color="#b00020";msg.textContent="Preencha nome, e-mail e senha.";return;}
-  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)){msg.style.color="#b00020";msg.textContent="Informe um e-mail válido.";return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg.style.color="#b00020";msg.textContent="Informe um e-mail válido.";return;}
   if(senha.length<6){msg.style.color="#b00020";msg.textContent="A senha precisa ter pelo menos 6 caracteres.";return;}
   const valorMensalidade=mensalidade===""?null:Number(String(mensalidade).replace(",","."));
   if(valorMensalidade!==null && (!Number.isFinite(valorMensalidade)||valorMensalidade<0)){msg.style.color="#b00020";msg.textContent="Mensalidade inválida.";return;}
-  msg.style.color="#555";msg.textContent="Cadastrando usuário...";
+
+  msg.style.color="#555";msg.textContent="Criando acesso...";
   const botao=document.querySelector('button[onclick="cadastrarNovoUsuario()"]');
   if(botao){botao.disabled=true;botao.dataset.oldText=botao.textContent;botao.textContent="Cadastrando...";}
+
   try{
-    const {data,error}=await supabaseClient.functions.invoke("admin-create-user",{
-      body:{nome,email,senha,tipo,acesso_ativo,mensalidade:valorMensalidade,vencimento:vencimento||null}
+    // Guardamos a sessão do administrador antes de criar a conta.
+    // O signUp pode autenticar temporariamente o novo usuário; depois restauramos o administrador.
+    const {data: sessaoAtual}=await supabaseClient.auth.getSession();
+    const sessaoAdmin=sessaoAtual?.session;
+    if(!sessaoAdmin) throw new Error("Sessão administrativa não encontrada. Entre novamente como administrador.");
+
+    const {data,error}=await supabaseClient.auth.signUp({
+      email,
+      password:senha,
+      options:{
+        data:{
+          nome,
+          tipo,
+          acesso_ativo,
+          mensalidade:valorMensalidade,
+          vencimento:vencimento||null
+        }
+      }
     });
-    if(error){
-      let detalhe=error.message||"Não foi possível cadastrar.";
-      try{const body=await error.context?.json?.();if(body?.error)detalhe=body.error;}catch(_e){}
-      throw new Error(detalhe);
+    if(error) throw error;
+    if(!data?.user?.id) throw new Error("O Supabase não retornou o usuário criado.");
+
+    // Restaura imediatamente a sessão do administrador.
+    const {error:erroSessao}=await supabaseClient.auth.setSession({
+      access_token:sessaoAdmin.access_token,
+      refresh_token:sessaoAdmin.refresh_token
+    });
+    if(erroSessao) throw erroSessao;
+
+    // Cria/atualiza o perfil usando a sessão do administrador.
+    const {error:erroPerfil}=await supabaseClient.from("perfis").upsert({
+      id:data.user.id,
+      nome,
+      email,
+      tipo,
+      acesso_ativo,
+      mensalidade:valorMensalidade,
+      vencimento:vencimento||null
+    },{onConflict:"id"});
+    if(erroPerfil){
+      throw new Error("A conta foi criada no Auth, mas o perfil não pôde ser salvo: "+erroPerfil.message);
     }
-    if(data?.error)throw new Error(data.error);
-    msg.style.color="#176b31";msg.textContent="Usuário cadastrado com sucesso!";
+
+    msg.style.color="#176b31";
+    msg.textContent=data.session
+      ? "Usuário cadastrado com sucesso! O administrador continua conectado."
+      : "Usuário cadastrado! Se a confirmação por e-mail estiver ativa, ele deverá confirmar o e-mail antes de entrar.";
+
     ["novoUsuarioNome","novoUsuarioEmail","novoUsuarioSenha","novoUsuarioMensalidade","novoUsuarioVencimento"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
     const ac=document.getElementById("novoUsuarioAcesso");if(ac)ac.checked=true;
     await carregarUsuariosAdmin();
@@ -2752,10 +2792,10 @@ async function cadastrarNovoUsuario(){
     console.error("CADASTRO USUÁRIO:",e);
     msg.style.color="#b00020";
     const texto=String(e?.message||e||"");
-    if(/FunctionsHttpError|404|not found|admin-create-user/i.test(texto)){
-      msg.textContent="Cadastro ainda não está conectado ao Supabase. Configure a função admin-create-user no Supabase.";
-    }else if(/already registered|already exists|User already registered/i.test(texto)){
+    if(/already registered|already exists|User already registered/i.test(texto)){
       msg.textContent="Este e-mail já está cadastrado.";
+    }else if(/row-level security|permission denied|not allowed/i.test(texto)){
+      msg.textContent="A conta foi criada, mas o Supabase bloqueou o salvamento do perfil. Precisamos ajustar a política da tabela perfis.";
     }else{
       msg.textContent="Não foi possível cadastrar: "+texto;
     }
