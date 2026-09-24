@@ -27,18 +27,20 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
 .admin-top{background:#111;color:#fff;padding:22px;display:flex;justify-content:space-between;align-items:center;gap:15px;position:sticky;top:0;z-index:2}
 .admin-top h2{margin:0;font-size:24px}.admin-top p{margin:5px 0 0;opacity:.75}
 .admin-close{background:#fff;color:#111;border-radius:10px;padding:10px 14px}
-.admin-body{padding:18px}.admin-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+.admin-body{padding:18px}.admin-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
 .admin-stat{background:#fff;border:1px solid #ddd;border-radius:14px;padding:15px}.admin-stat strong{display:block;font-size:24px;margin-top:5px}.admin-stat small{color:#777}
-.admin-nav{display:flex;gap:8px;overflow:auto;margin-bottom:14px}.admin-nav button{white-space:nowrap}.admin-nav .active{background:#111;color:#fff}
-.admin-section{display:none}.admin-section.active{display:block}.admin-card{background:#fff;border:1px solid #ddd;border-radius:14px;padding:16px;margin-bottom:14px}
-.admin-table-wrap{overflow:auto}.admin-table{width:100%;border-collapse:collapse;min-width:720px}.admin-table th,.admin-table td{padding:10px;border-bottom:1px solid #eee;text-align:left;font-size:13px;vertical-align:middle}.admin-table th{background:#fafafa}
+.admin-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.admin-section{display:none}.admin-section.active{display:block}
 .admin-actions{display:flex;gap:6px;flex-wrap:wrap}.admin-actions button{padding:8px 10px}.admin-badge{display:inline-block;border-radius:20px;padding:4px 8px;font-size:11px;background:#eee}.admin-badge.ok{background:#e7f7ec;color:#176b31}.admin-badge.block{background:#fdeaea;color:#9b1c1c}
 .admin-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.admin-form-grid .full{grid-column:1/-1}
 .admin-product-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.admin-product{border:1px solid #ddd;border-radius:12px;padding:12px}.admin-product b{display:block;margin-bottom:4px}.admin-muted{color:#777;font-size:13px}.admin-empty{text-align:center;color:#777;padding:25px}
-@media(max-width:700px){.admin-grid{grid-template-columns:repeat(2,1fr)}.admin-form-grid,.admin-product-list{grid-template-columns:1fr}.admin-top{position:relative}.admin-body{padding:12px}}
+@media(max-width:700px){.admin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-form-grid,.admin-product-list{grid-template-columns:1fr}.admin-top{position:relative}.admin-body{padding:12px}}
 
 .admin-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.admin-edit-grid .full{grid-column:1/-1}.admin-danger{background:#b00020;color:#fff}.admin-warning{background:#fff4d6;color:#7a5200;border:1px solid #e7c66b}.admin-success{background:#e7f7ec;color:#176b31;border:1px solid #b8dfc3}.admin-kpi{font-size:26px;font-weight:800}.admin-filter{display:grid;grid-template-columns:1fr 180px;gap:8px;margin-bottom:10px}.admin-table input,.admin-table select{min-width:110px;padding:8px}.admin-table .mini{padding:7px 9px;font-size:12px}.admin-pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eee;font-size:11px}.admin-pill.due{background:#fff4d6;color:#7a5200}.admin-pill.overdue{background:#fdeaea;color:#9b1c1c}.admin-pill.paid{background:#e7f7ec;color:#176b31}@media(max-width:700px){.admin-edit-grid,.admin-filter{grid-template-columns:1fr}.admin-edit-grid .full{grid-column:auto}}
-
+.product-image{width:180px;height:180px;border-radius:9px;object-fit:contain;background:#fff;border:1px solid #d5d5d5;display:block;cursor:zoom-in}.admin-product-image{width:64px;height:64px;border-radius:9px;object-fit:cover;background:#f1f1f1;border:1px solid #ddd;display:block}.product-image-placeholder,.admin-product-image-placeholder{display:flex;align-items:center;justify-content:center;color:#888;font-size:11px;text-align:center;padding:5px}.product-result{display:grid;grid-template-columns:180px minmax(0,1fr) auto;gap:16px;align-items:center}.admin-product-image{width:48px;height:48px}.admin-product-image-placeholder{font-size:10px}.admin-image-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.admin-image-actions input{display:none}
+@media(max-width:650px){.product-result{grid-template-columns:1fr}.product-image{width:100%;height:220px}}
+.product-lightbox{position:fixed;inset:0;z-index:1000001;background:#fff;display:flex;align-items:center;justify-content:center;padding:18px;cursor:zoom-out}.product-lightbox img{width:auto;height:82vh;max-width:92vw;max-height:82vh;object-fit:contain;border-radius:10px;box-shadow:0 18px 50px rgba(0,0,0,.2);background:#fff;cursor:default}.product-lightbox-close{position:absolute;top:16px;right:18px;width:44px;height:44px;padding:0;border-radius:50%;background:#fff;color:#111;font-size:28px;line-height:1}.product-lightbox-close:focus-visible{outline:3px solid #111;outline-offset:3px}
+.admin-photo-preview{display:flex;align-items:center;gap:8px;width:100%;margin-top:6px;color:#555;font-size:11px}.admin-photo-preview img{width:48px;height:48px;object-fit:contain;background:#fff;border:1px solid #ddd;border-radius:6px}.admin-photo-preview.low{color:#b00020}.admin-photo-preview.warn{color:#7a5200}.admin-photo-preview.good{color:#176b31}.admin-photo-actions{display:flex;gap:6px;width:100%;margin-top:6px}.admin-photo-actions button{padding:7px 9px;font-size:12px}.admin-photo-actions .save{background:#16853a;color:#fff}
 /* ===== MENU PRINCIPAL / MOBILE ===== */
 #menuButton{
   position:fixed;
@@ -140,9 +142,7 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
     <div class="menu-title">MENU</div>
 
     <a href="#" onclick="fecharMenu();return false;">🏠 Início</a>
-    <a href="#search" onclick="fecharMenu();setTimeout(()=>document.getElementById('search')?.focus(),250);return false;">🔎 Consulta</a>
     <a href="#order" onclick="fecharMenu();document.getElementById('client')?.scrollIntoView({behavior:'smooth',block:'start'});return false;">🛒 Novo pedido</a>
-    <a href="#" onclick="fecharMenu();return false;">📋 Pedidos</a>
     <a href="#" onclick="fecharMenu();return false;">👤 Minha conta</a>
 
     <a href="#" id="menuAdmin" style="display:none;" onclick="abrirAdministracao();return false;">👑 Administração</a>
@@ -163,7 +163,7 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
     <h2 style="margin-top:0">Faturamento / Pedido</h2>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label for="client">CLIENTE</label><input id="client" placeholder="Nome do cliente"></div>
-      <div><label for="date">DATA</label><input id="date" type="date"></div>
+      <div><label for="date">DATA</label><input id="date" type="date" lang="pt-BR"></div>
     </div>
     <div id="order"><div class="empty">Nenhum produto adicionado.</div></div>
     <div class="summary">
@@ -975,7 +975,7 @@ const products = [
     "name": "REDUX CREAM TÉRMICO KER",
     "size": "3,5KG",
     "price": 438.0,
-    "salonPrice": 1.0
+    "salonPrice": 1068.0
   },
   {
     "id": "000953-98",
@@ -2188,17 +2188,44 @@ const products = [
 ];
 let table='dist';
 let order=[];
+const PRODUTO_IMAGENS_BUCKET='produto-imagens';
+const PRODUTO_IMAGENS_CODE_COLUMN='codigo';
+const PRODUTO_IMAGENS_PATH_COLUMN='storage_path';
+const produtoImagens=new Map();
 const brl=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
+function formatarDataVisual(value){
+ const text=String(value||'').trim();
+ if(!text)return '';
+ const iso=text.match(/^(\d{4})-(\d{2})-(\d{2})(.*)$/);
+ if(iso)return `${iso[3]}/${iso[2]}/${iso[1]}${iso[4]?iso[4].replace('T',' '):''}`;
+ const us=text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(.*)$/);
+ if(us)return `${us[2].padStart(2,'0')}/${us[1].padStart(2,'0')}/${us[3]}${us[4]||''}`;
+ return text;
+}
 const today=new Date();
 document.getElementById('date').value=today.toISOString().slice(0,10);
 function priceOf(p){return table==='salon'?(p.salonPrice??p.price):p.price}
 function setTable(t){table=t;document.getElementById('tabDist').classList.toggle('active',t==='dist');document.getElementById('tabSalon').classList.toggle('active',t==='salon');searchProducts();renderOrder()}
+function fecharImagemProduto(){document.getElementById('produtoLightbox')?.remove();document.removeEventListener('keydown',fecharImagemProdutoEsc)}
+function fecharImagemProdutoEsc(e){if(e.key==='Escape')fecharImagemProduto()}
+function abrirImagemProduto(src,alt){
+ const anterior=document.getElementById('produtoLightbox');if(anterior)anterior.remove();
+ const lightbox=document.createElement('div');lightbox.id='produtoLightbox';lightbox.className='product-lightbox';lightbox.setAttribute('role','dialog');lightbox.setAttribute('aria-modal','true');lightbox.setAttribute('aria-label','Visualização da foto do produto');
+ const imagem=document.createElement('img');imagem.alt=alt||'Foto ampliada do produto';imagem.src=src;
+ const fechar=document.createElement('button');fechar.type='button';fechar.className='product-lightbox-close';fechar.setAttribute('aria-label','Fechar foto ampliada');fechar.textContent='×';fechar.onclick=fecharImagemProduto;
+ lightbox.append(fechar,imagem);lightbox.onclick=e=>{if(e.target===lightbox)fecharImagemProduto()};document.body.appendChild(lightbox);document.addEventListener('keydown',fecharImagemProdutoEsc);fechar.focus();
+}
+function imagemProdutoHtml(codigo,classe='product-image'){
+ const imagem=produtoImagens.get(String(codigo));
+ const ampliar=classe.includes('admin')?'':' onclick="abrirImagemProduto(this.src,this.alt)"';
+ return imagem?.url?`<img class="${classe}" src="${esc(imagem.url)}" alt="Foto do produto ${esc(codigo)}" loading="lazy"${ampliar}>`:`<div class="${classe} ${classe.includes('admin')?'admin-product-image-placeholder':'product-image-placeholder'}">Sem foto</div>`;
+}
 function searchProducts(){
  const q=document.getElementById('search').value.trim().toLowerCase(),box=document.getElementById('results');
  if(!q){box.innerHTML='<div class="empty">Digite o código ou nome para pesquisar.</div>';return}
  const found=products.filter(p=>{const hay=(p.code+' '+p.name+' '+p.size).toLowerCase();return hay.includes(q)&&(table==='dist'||p.salonPrice!==null)}).slice(0,50);
  if(!found.length){box.innerHTML='<div class="empty">Nenhum produto encontrado.</div>';return}
- box.innerHTML=found.map(p=>`<div class="product"><div><h3>${esc(p.name)}</h3><div class="meta">Código ${p.code}${p.size?' • '+esc(p.size):''}</div><div class="prices">Preço: <span class="price">${brl(priceOf(p))}</span>${table==='dist'&&p.salonPrice!==null?` <span class="badge">Salão Bahia: ${brl(p.salonPrice)}</span>`:''}</div></div><button class="primary" onclick="addProduct('${p.id}')">Adicionar</button></div>`).join('')
+ box.innerHTML=found.map(p=>`<div class="product product-result">${imagemProdutoHtml(p.code)}<div><h3>${esc(p.name)}</h3><div class="meta">Código ${p.code}${p.size?' • '+esc(p.size):''}</div><div class="prices">Preço: <span class="price">${brl(priceOf(p))}</span>${table==='dist'&&p.salonPrice!==null?` <span class="badge">Salão Bahia: ${brl(p.salonPrice)}</span>`:''}</div></div><button class="primary" onclick="addProduct('${p.id}')">Adicionar</button></div>`).join('')
 }
 function addProduct(id){const p=products.find(x=>x.id===id);if(!p)return;const existing=order.find(x=>x.id===id&&x.table===table);if(existing)existing.qty++;else order.push({id:p.id,code:p.code,name:p.name,size:p.size,qty:1,unit:priceOf(p),table});renderOrder()}
 function getDiscount(){const subtotal=order.reduce((s,x)=>s+x.unit*x.qty,0);let v=Math.max(0,parseFloat(document.getElementById('discountValue').value)||0);const type=document.getElementById('discountType').value;let discount=type==='percent'?subtotal*Math.min(v,100)/100:Math.min(v,subtotal);return {subtotal,discount,total:Math.max(0,subtotal-discount),type,value:v}}
@@ -2210,7 +2237,7 @@ function renderOrder(){
 function changeQty(i,v){order[i].qty=Math.max(1,parseInt(v)||1);renderOrder()}
 function removeItem(i){order.splice(i,1);renderOrder()}
 function clearOrder(){order=[];document.getElementById('discountValue').value=0;renderOrder();document.getElementById('invoiceCard').classList.add('hidden')}
-function invoiceMessage(){const client=document.getElementById('client').value.trim()||'Cliente',date=document.getElementById('date').value,dateBr=date?date.split('-').reverse().join('/'):'',d=getDiscount();let text=`ANUAR COSMÉTICOS\nFATURAMENTO / PEDIDO\n\nCliente: ${client}\nData: ${dateBr}\nTabela: ${table==='salon'?'Salão Bahia':'Distribuidor'}\n\n`;order.forEach(x=>text+=`${x.qty}x ${x.name} - ${brl(x.unit)} = ${brl(x.unit*x.qty)}\nCódigo: ${x.code}\n`);text+=`\nSUBTOTAL: ${brl(d.subtotal)}\nDESCONTO: -${brl(d.discount)}\nTOTAL: ${brl(d.total)}\n\nObrigado pela preferência!`;return text}
+function invoiceMessage(){const client=document.getElementById('client').value.trim()||'Cliente',date=document.getElementById('date').value,dateBr=formatarDataVisual(date),d=getDiscount();let text=`ANUAR COSMÉTICOS\nFATURAMENTO / PEDIDO\n\nCliente: ${client}\nData: ${dateBr}\nTabela: ${table==='salon'?'Salão Bahia':'Distribuidor'}\n\n`;order.forEach(x=>text+=`${x.qty}x ${x.name} - ${brl(x.unit)} = ${brl(x.unit*x.qty)}\nCódigo: ${x.code}\n`);text+=`\nSUBTOTAL: ${brl(d.subtotal)}\nDESCONTO: -${brl(d.discount)}\nTOTAL: ${brl(d.total)}\n\nObrigado pela preferência!`;return text}
 function generateInvoice(){if(!order.length){alert('Adicione pelo menos um produto.');return}try{registrarPedidoAdmin()}catch(e){console.error(e)}document.getElementById('invoiceText').value=invoiceMessage();document.getElementById('invoiceCard').classList.remove('hidden');document.getElementById('invoiceCard').scrollIntoView({behavior:'smooth'})}
 async function copyInvoice(){const text=document.getElementById('invoiceText').value;try{await navigator.clipboard.writeText(text);alert('Faturamento copiado!')}catch(e){document.getElementById('invoiceText').select();document.execCommand('copy');alert('Faturamento copiado!')}}
 function sendWhatsApp(){if(!order.length){alert('Adicione pelo menos um produto.');return}window.open('https://wa.me/?text='+encodeURIComponent(invoiceMessage()),'_blank')}
@@ -2234,6 +2261,105 @@ const supabaseClient = supabase.createClient(
     }
   }
 );
+
+function imagemStoragePath(row){const value=row?.[PRODUTO_IMAGENS_PATH_COLUMN]||row?.path||row?.caminho||row?.arquivo||'';return String(value).trim().replace(/^\/?produto-imagens\//i,'').replace(/^\/?storage\/v1\/object\/(?:public|sign)\/produto-imagens\//i,'');}
+async function urlImagemProduto(row){
+  if(!row)return null;
+  const directUrl=row.url||row.imagem_url||row.public_url;
+  if(directUrl)return directUrl;
+  const rawPath=row[PRODUTO_IMAGENS_PATH_COLUMN]||row.caminho||row.path||row.arquivo||'';
+  const path=imagemStoragePath({path:rawPath});
+  if(!path)return null;
+  if(/^https?:\/\//i.test(path))return path;
+  const {data,error}=supabaseClient.storage.from(PRODUTO_IMAGENS_BUCKET).getPublicUrl(path);
+  if(error){console.warn('Não foi possível gerar a URL pública da imagem:',error);return null;}
+  return data?.publicUrl||null;
+}
+async function carregarImagensProdutos(){
+  const {data,error}=await supabaseClient.from('produto_imagens').select('*');
+  if(error){console.warn('Não foi possível carregar as imagens dos produtos:',error);produtoImagens.clear();searchProducts();return;}
+  produtoImagens.clear();
+  await Promise.all((data||[]).map(async row=>{
+    const codigo=row?.[PRODUTO_IMAGENS_CODE_COLUMN]||row?.codigo_produto||row?.produto_codigo;
+    if(codigo!=null)produtoImagens.set(String(codigo),{url:await urlImagemProduto(row),path:imagemStoragePath(row)});
+  }));
+  searchProducts();
+}
+async function adminImagemAutorizado(){
+  if(!ehAdmin())return false;
+  const {data:{user}}=await supabaseClient.auth.getUser();
+  if(!user)return false;
+  const {data,error}=await supabaseClient.from('perfis').select('tipo,acesso_ativo').eq('id',user.id).single();
+  return !error&&data?.tipo==='admin'&&data?.acesso_ativo===true;
+}
+function nomeImagemSeguro(nome){return String(nome||'imagem').toLowerCase().replace(/[^a-z0-9._-]/g,'-').replace(/-+/g,'-').slice(-80)||'imagem';}
+function tamanhoArquivoImagem(bytes){const unidades=['B','KB','MB'];let valor=Number(bytes)||0,indice=0;while(valor>=1024&&indice<unidades.length-1){valor/=1024;indice++;}return `${valor.toFixed(indice?2:0)} ${unidades[indice]}`;}
+async function prepararImagemProduto(codigo,input){
+ const file=input?.files?.[0],info=document.getElementById(`imagemInfo-${codigo}`);
+ if(!file)return;
+ if(!file.type.startsWith('image/')){if(info)info.innerHTML='<span class="low">Selecione um arquivo de imagem.</span>';input.value='';return;}
+ if(file.size>5*1024*1024){if(info)info.innerHTML='<span class="low">A imagem deve ter no máximo 5 MB.</span>';input.value='';return;}
+ const previewUrl=URL.createObjectURL(file),image=new Image();
+ try{
+  const dimensoes=await new Promise((resolve,reject)=>{image.onload=()=>resolve({width:image.naturalWidth,height:image.naturalHeight});image.onerror=()=>reject(new Error('Não foi possível ler a resolução da imagem.'));image.src=previewUrl;});
+  const pixels=dimensoes.width*dimensoes.height,classe=pixels<250000?'low':(pixels<1000000?'warn':'good');
+  const mensagem=classe==='low'?'❌ Imagem com resolução muito baixa. O upload foi impedido.':classe==='warn'?'⚠️ Abaixo do recomendado (1000 × 1000 px ou equivalente).':'✅ Boa resolução.';
+  input.dataset.arquivoSelecionado=file.name;
+  input._fotoPendente={file,previewUrl,classe};
+  if(info){info.className=`admin-photo-preview ${classe}`;info.innerHTML=`<img src="${esc(previewUrl)}" alt="Prévia da imagem selecionada"><span>${dimensoes.width} × ${dimensoes.height} px · ${tamanhoArquivoImagem(file.size)}<br>${mensagem}</span>`;}
+  const acoes=document.getElementById(`imagemAcoes-${codigo}`);if(acoes)acoes.style.display='flex';
+  const salvar=document.getElementById(`salvarImagem-${codigo}`);if(salvar)salvar.disabled=classe==='low';
+ }catch(error){if(info)info.innerHTML=`<span class="low">${esc(error.message||'Não foi possível ler a imagem.')}</span>`;input.value='';}
+}
+function cancelarImagemProduto(codigo){
+ const input=document.getElementById(`imagemProduto-${codigo}`),info=document.getElementById(`imagemInfo-${codigo}`),acoes=document.getElementById(`imagemAcoes-${codigo}`);
+ if(input?._fotoPendente?.previewUrl)URL.revokeObjectURL(input._fotoPendente.previewUrl);
+ if(input){input.value='';delete input._fotoPendente;delete input.dataset.arquivoSelecionado;}
+ if(info){info.className='admin-photo-preview';info.innerHTML='';}
+ if(acoes)acoes.style.display='none';
+}
+async function confirmarImagemProduto(codigo){
+ const input=document.getElementById(`imagemProduto-${codigo}`);
+ if(!input?._fotoPendente||document.getElementById(`salvarImagem-${codigo}`)?.disabled)return;
+ const previewUrl=input._fotoPendente.previewUrl;
+ const botao=document.getElementById(`salvarImagem-${codigo}`);if(botao){botao.disabled=true;botao.textContent='Salvando...';}
+ try{const salvo=await salvarImagemProduto(codigo,input);if(!salvo){if(botao){botao.disabled=false;botao.textContent='Salvar foto';}return;}URL.revokeObjectURL(previewUrl);const info=document.getElementById(`imagemInfo-${codigo}`),acoes=document.getElementById(`imagemAcoes-${codigo}`);if(info){info.className='admin-photo-preview good';info.innerHTML='<span>Foto salva com sucesso!</span>';}if(acoes)acoes.style.display='none';}catch(error){if(botao){botao.disabled=false;botao.textContent='Salvar foto';}throw error;}
+}
+async function salvarImagemProduto(codigo,input){
+  if(!(await adminImagemAutorizado())){alert('Acesso restrito ao administrador ativo.');return false;}
+  const file=input?.files?.[0];
+  if(!file)return false;
+  if(!file.type.startsWith('image/')){alert('Selecione um arquivo de imagem.');input.value='';return false;}
+  if(file.size>5*1024*1024){alert('A imagem deve ter no máximo 5 MB.');input.value='';return false;}
+  const anterior=produtoImagens.get(String(codigo));
+  const path=`${codigo}/${Date.now()}-${nomeImagemSeguro(file.name)}`;
+  const {error:uploadError}=await supabaseClient.storage.from(PRODUTO_IMAGENS_BUCKET).upload(path,file,{upsert:false,contentType:file.type});
+  if(uploadError){alert('Não foi possível enviar a imagem: '+uploadError.message);input.value='';return false;}
+  const {error:saveError}=await supabaseClient.from('produto_imagens').upsert({[PRODUTO_IMAGENS_CODE_COLUMN]:String(codigo),[PRODUTO_IMAGENS_PATH_COLUMN]:path},{onConflict:PRODUTO_IMAGENS_CODE_COLUMN});
+  if(saveError){await supabaseClient.storage.from(PRODUTO_IMAGENS_BUCKET).remove([path]);alert('Não foi possível salvar o vínculo da imagem: '+saveError.message);input.value='';return false;}
+  if(anterior?.path)await supabaseClient.storage.from(PRODUTO_IMAGENS_BUCKET).remove([anterior.path]);
+  input.value='';
+  await carregarImagensProdutos();
+  carregarProdutosAdmin();
+  return true;
+}
+async function removerImagemProduto(codigo){
+  if(!(await adminImagemAutorizado())){alert('Acesso restrito ao administrador ativo.');return;}
+  if(!confirm('Remover a foto deste produto?'))return;
+  const imagem=produtoImagens.get(String(codigo));
+  if(imagem?.path){
+    const {error:storageError}=await supabaseClient.storage.from(PRODUTO_IMAGENS_BUCKET).remove([imagem.path]);
+    const arquivoInexistente=storageError&&(
+      storageError.status===404||
+      /not found|does not exist|não existe|nao existe/i.test(storageError.message||'')
+    );
+    if(storageError&&!arquivoInexistente){alert('Não foi possível remover a foto do Storage: '+storageError.message);return;}
+  }
+  const {error}=await supabaseClient.from('produto_imagens').delete().eq(PRODUTO_IMAGENS_CODE_COLUMN,String(codigo));
+  if(error){alert('Não foi possível remover o vínculo da imagem: '+error.message);return;}
+  await carregarImagensProdutos();
+  carregarProdutosAdmin();
+}
 
 
 /* ================================
@@ -2501,6 +2627,7 @@ if (!perfil || perfil.acesso_ativo !== true) {
 
   liberarSite();
   configurarMenuAdmin(perfil);
+  carregarImagensProdutos();
   
 }
 
@@ -2588,8 +2715,6 @@ function adminAba(nome){
   if(nome==='dashboard') atualizarDashboardAdmin();
   if(nome==='usuarios') carregarUsuariosAdmin();
   if(nome==='produtos') carregarProdutosAdmin();
-  if(nome==='pedidos') carregarPedidosAdmin();
-  if(nome==='faturamento') carregarFaturamentoAdmin();
 }
 
 function abrirAdministracao(){
@@ -2607,81 +2732,61 @@ function abrirAdministracao(){
         <div class="admin-stat"><small>✅ Ativos</small><strong id="adminStatAtivos">—</strong></div>
         <div class="admin-stat"><small>🚫 Bloqueados</small><strong id="adminStatBloqueados">—</strong></div>
         <div class="admin-stat"><small>📦 Produtos</small><strong>${products.length}</strong></div>
-        <div class="admin-stat"><small>💰 Mensalidades</small><strong id="adminStatMensalidades">—</strong></div>
-        <div class="admin-stat"><small>⚠️ Vencidos</small><strong id="adminStatVencidos">—</strong></div>
       </div>
       <div class="admin-nav">
         <button class="secondary active" data-aba="dashboard" onclick="adminAba('dashboard')">📊 Dashboard</button>
         <button class="secondary" data-aba="usuarios" onclick="adminAba('usuarios')">👥 Usuários</button>
         <button class="secondary" data-aba="produtos" onclick="adminAba('produtos')">📦 Produtos</button>
-        <button class="secondary" data-aba="pedidos" onclick="adminAba('pedidos')">🧾 Pedidos</button>
-        <button class="secondary" data-aba="faturamento" onclick="adminAba('faturamento')">💰 Faturamento</button>
+       
       </div>
       <section class="admin-section active" data-section="dashboard">
         <div class="admin-card"><h3>📊 Resumo</h3><p class="admin-muted">Visão geral da administração da Consulta Anuar.</p><div id="adminDashboardResumo"></div></div>
         <div class="admin-card"><h3>🔐 Área exclusiva</h3><p class="admin-muted">A Administração só é aberta quando o perfil autenticado é <b>admin</b> e está com acesso ativo. As operações do painel também verificam essa condição.</p></div>
       </section>
       <section class="admin-section" data-section="usuarios">
-        <div class="admin-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">👥 Gerenciar usuários</h3><p class="admin-muted">Nome, e-mail, tipo, acesso, mensalidade e vencimento.</p></div><button class="primary" onclick="carregarUsuariosAdmin()">Atualizar</button></div><div class="admin-filter" style="margin-top:10px"><input id="adminUsuarioBusca" placeholder="Pesquisar por nome ou e-mail" oninput="carregarUsuariosAdmin()"><select id="adminUsuarioFiltro" onchange="carregarUsuariosAdmin()"><option value="todos">Todos</option><option value="admin">Administradores</option><option value="distribuidor">Distribuidores</option><option value="salão">Salões</option><option value="bloqueado">Bloqueados</option></select></div><div id="adminUsuariosMsg" class="admin-muted"></div></div><div class="admin-card" style="margin-top:12px">
+        <div class="admin-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">👥 Gerenciar usuários</h3><p class="admin-muted">Nome, e-mail, tipo e acesso.</p></div><button class="primary" onclick="carregarUsuariosAdmin()">Atualizar</button></div><div class="admin-filter" style="margin-top:10px"><input id="adminUsuarioBusca" placeholder="Pesquisar por nome ou e-mail" oninput="carregarUsuariosAdmin()"><select id="adminUsuarioFiltro" onchange="carregarUsuariosAdmin()"><option value="todos">Todos</option><option value="admin">Administradores</option><option value="funcionario">Funcionários</option><option value="bloqueado">Bloqueados</option></select></div><div id="adminUsuariosMsg" class="admin-muted"></div></div><div class="admin-card" style="margin-top:12px">
 <h3 style="margin-top:0">➕ Cadastrar novo usuário</h3>
 <p class="admin-muted">Crie o acesso e o perfil do novo usuário.</p>
 <div class="admin-edit-grid">
 <div><label>Nome</label><input id="novoUsuarioNome" type="text" placeholder="Nome completo"></div>
 <div><label>E-mail</label><input id="novoUsuarioEmail" type="email" placeholder="E-mail"></div>
 <div><label>Senha inicial</label><input id="novoUsuarioSenha" type="password" minlength="6" placeholder="Mínimo 6 caracteres"></div>
-<div><label>Tipo</label><select id="novoUsuarioTipo"><option value="salão">salão</option><option value="distribuidor">distribuidor</option><option value="admin">admin</option></select></div>
-<div><label>Mensalidade</label><input id="novoUsuarioMensalidade" type="number" min="0" step="0.01" placeholder="0,00"></div>
-<div><label>Vencimento</label><input id="novoUsuarioVencimento" type="date"></div>
+<div><label>Tipo</label><select id="novoUsuarioTipo"><option value="funcionario">Funcionário</option><option value="admin">Administrador</option></select></div>
 </div>
 <label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input id="novoUsuarioAcesso" type="checkbox" checked> Acesso ativo</label>
 <button class="primary" style="width:100%;margin-top:12px" onclick="cadastrarNovoUsuario()">Cadastrar usuário</button>
 <div id="novoUsuarioMensagem" class="admin-muted" style="margin-top:8px"></div>
 </div>
-        <div class="admin-card"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Tipo</th><th>Acesso</th><th>Mensalidade</th><th>Vencimento</th><th>Ações</th></tr></thead><tbody id="adminUsuariosBody"><tr><td colspan="7" class="admin-empty">Carregando...</td></tr></tbody></table></div></div>
+        <div class="admin-card"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Tipo</th><th>Acesso</th><th>Ações</th></tr></thead><tbody id="adminUsuariosBody"><tr><td colspan="5" class="admin-empty">Carregando...</td></tr></tbody></table></div></div>
       </section>
       <section class="admin-section" data-section="produtos">
         <div class="admin-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">📦 Gerenciar produtos</h3><p class="admin-muted">Código, nome, categoria, preços e ativo/inativo.</p></div><button class="primary" onclick="novoProdutoAdmin()">➕ Cadastrar produto</button></div><input id="adminProdutoBusca" placeholder="Pesquisar produto, código ou categoria" oninput="carregarProdutosAdmin()" style="margin-top:10px"></div>
-        <div class="admin-card"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Código</th><th>Nome</th><th>Categoria</th><th>Distribuidor</th><th>Salão Bahia</th><th>Status</th><th>Ações</th></tr></thead><tbody id="adminProdutosBody"></tbody></table></div></div>
-      </section>
-      <section class="admin-section" data-section="pedidos">
-        <div class="admin-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">🧾 Pedidos</h3><p class="admin-muted">Cliente, data, produtos, desconto, total e status.</p></div><button class="primary" onclick="carregarPedidosAdmin()">Atualizar</button></div><div class="admin-filter" style="margin-top:10px"><input id="adminPedidoBusca" placeholder="Pesquisar cliente ou data" oninput="carregarPedidosAdmin()"><select id="adminPedidoStatus" onchange="carregarPedidosAdmin()"><option value="todos">Todos os status</option><option value="pendente">Pendente</option><option value="processando">Processando</option><option value="concluido">Concluído</option><option value="cancelado">Cancelado</option></select></div></div>
-        <div class="admin-card"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Cliente</th><th>Data</th><th>Produtos</th><th>Desconto</th><th>Total</th><th>Status</th><th>Ações</th></tr></thead><tbody id="adminPedidosBody"></tbody></table></div></div>
-      </section>
-      <section class="admin-section" data-section="faturamento">
-        <div class="admin-card"><h3>💰 Controle administrativo</h3><p class="admin-muted">Mensalidades, vencimentos e usuários inadimplentes/bloqueados.</p><div class="admin-grid"><div class="admin-stat"><small>Mensalidades cadastradas</small><strong id="fatTotal">—</strong></div><div class="admin-stat"><small>Em atraso</small><strong id="fatAtrasadas">—</strong></div><div class="admin-stat"><small>Bloqueados</small><strong id="fatBloqueados">—</strong></div></div></div>
-        <div class="admin-card"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Usuário</th><th>Mensalidade</th><th>Vencimento</th><th>Situação</th><th>Ação</th></tr></thead><tbody id="adminFaturamentoBody"></tbody></table></div></div>
+        <div class="admin-card"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Foto</th><th>Código</th><th>Nome</th><th>Categoria</th><th>Distribuidor</th><th>Salão Bahia</th><th>Status</th><th>Ações</th></tr></thead><tbody id="adminProdutosBody"></tbody></table></div></div>
       </section>
     </div>
   </div>`;
   document.body.appendChild(overlay); adminAba('dashboard');
 }
 
-function formatarDataAdmin(v){if(!v)return '—';const p=String(v).slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:v;}
-function vencimentoStatus(v,ativo=true){if(!v)return ativo?'Sem vencimento':'Bloqueado';const d=new Date(String(v).slice(0,10)+'T23:59:59');const hoje=new Date();const diff=Math.ceil((d-hoje)/86400000);if(!ativo)return 'Bloqueado';if(diff<0)return 'Inadimplente';if(diff<=7)return 'Vence em breve';return 'Em dia';}
-function statusClass(st){return st==='Inadimplente'?'overdue':(st==='Em dia'?'paid':'due');}
-
 async function atualizarDashboardAdmin(){
   if(!ehAdmin())return;
-  const {data,error}=await supabaseClient.from('perfis').select('id,tipo,acesso_ativo,mensalidade,vencimento');
+  const {data,error}=await supabaseClient.from('perfis').select('id,tipo,acesso_ativo');
   if(error){console.error(error);return;}
   const ativos=data.filter(x=>x.acesso_ativo===true).length, bloqueados=data.length-ativos;
-  const mensalidades=data.reduce((s,x)=>s+(Number(x.mensalidade)||0),0), vencidos=data.filter(x=>vencimentoStatus(x.vencimento,x.acesso_ativo)==='Inadimplente').length;
   document.getElementById('adminStatUsuarios').textContent=data.length;
   document.getElementById('adminStatAtivos').textContent=ativos;
   document.getElementById('adminStatBloqueados').textContent=bloqueados;
-  document.getElementById('adminStatMensalidades').textContent=brl(mensalidades);
-  document.getElementById('adminStatVencidos').textContent=vencidos;
-  document.getElementById('adminDashboardResumo').innerHTML=`<p><b>${ativos}</b> usuários ativos, <b>${bloqueados}</b> bloqueados e <b>${vencidos}</b> com vencimento em atraso.</p>`;
+  document.getElementById('adminDashboardResumo').innerHTML=`<p><b>${ativos}</b> usuários ativos e <b>${bloqueados}</b> bloqueados.</p>`;
 }
 
 async function carregarUsuariosAdmin(){
   if(!ehAdmin())return; const body=document.getElementById('adminUsuariosBody'); if(!body)return;
-  body.innerHTML='<tr><td colspan="7" class="admin-empty">Carregando...</td></tr>';
-  const {data,error}=await supabaseClient.from('perfis').select('id,nome,email,tipo,acesso_ativo,mensalidade,vencimento,criado_em').order('criado_em',{ascending:false});
-  if(error){body.innerHTML=`<tr><td colspan="7" class="admin-empty">${esc(error.message||'Erro ao carregar usuários.')}</td></tr>`;return;}
+  body.innerHTML='<tr><td colspan="5" class="admin-empty">Carregando...</td></tr>';
+  const {data,error}=await supabaseClient.from('perfis').select('id,nome,email,tipo,acesso_ativo,criado_em').order('criado_em',{ascending:false});
+  if(error){body.innerHTML=`<tr><td colspan="5" class="admin-empty">${esc(error.message||'Erro ao carregar usuários.')}</td></tr>`;return;}
   const q=(document.getElementById('adminUsuarioBusca')?.value||'').toLowerCase().trim(), filtro=document.getElementById('adminUsuarioFiltro')?.value||'todos';
-  const list=data.filter(u=>{const hay=`${u.nome||''} ${u.email||''}`.toLowerCase(); if(q&&!hay.includes(q))return false; if(filtro==='bloqueado')return !u.acesso_ativo; if(['admin','distribuidor','salão'].includes(filtro))return u.tipo===filtro; return true;});
-  body.innerHTML=list.length?list.map(u=>`<tr><td>${esc(u.nome||'—')}</td><td>${esc(u.email||'—')}</td><td><select onchange="alterarTipoAdmin('${u.id}',this.value)"><option ${u.tipo==='admin'?'selected':''} value="admin">admin</option><option ${u.tipo==='distribuidor'?'selected':''} value="distribuidor">distribuidor</option><option ${u.tipo==='salão'?'selected':''} value="salão">salão</option></select></td><td><span class="admin-badge ${u.acesso_ativo?'ok':'block'}">${u.acesso_ativo?'Ativo':'Bloqueado'}</span></td><td>${u.mensalidade==null?'—':brl(u.mensalidade)}</td><td><span class="admin-pill ${statusClass(vencimentoStatus(u.vencimento,u.acesso_ativo))}">${formatarDataAdmin(u.vencimento)}</span></td><td><div class="admin-actions"><button class="secondary mini" onclick='editarPerfilAdmin(${JSON.stringify(u)})'>Editar</button><button class="${u.acesso_ativo?'secondary':'green'} mini" onclick="alternarAcessoAdmin('${u.id}',${u.acesso_ativo?'false':'true'})">${u.acesso_ativo?'Bloquear':'Liberar'}</button></div></td></tr>`).join(''):'<tr><td colspan="7" class="admin-empty">Nenhum usuário encontrado.</td></tr>';
+  const list=data.filter(u=>{const hay=`${u.nome||''} ${u.email||''}`.toLowerCase(); if(q&&!hay.includes(q))return false; if(filtro==='bloqueado')return !u.acesso_ativo; if(['admin','funcionario'].includes(filtro))return u.tipo===filtro; return true;});
+  body.innerHTML=list.length?list.map(u=>`<tr><td>${esc(u.nome||'—')}</td><td>${esc(u.email||'—')}</td><td><select onchange="alterarTipoAdmin('${u.id}',this.value)"><option ${u.tipo==='admin'?'selected':''} value="admin">Administrador</option><option ${u.tipo==='funcionario'?'selected':''} value="funcionario">Funcionário</option></select></td><td><span class="admin-badge ${u.acesso_ativo?'ok':'block'}">${u.acesso_ativo?'Ativo':'Bloqueado'}</span></td><td><div class="admin-actions"><button class="secondary mini" onclick='editarPerfilAdmin(${JSON.stringify(u)})'>Editar</button><button class="${u.acesso_ativo?'secondary':'green'} mini" onclick="alternarAcessoAdmin('${u.id}',${u.acesso_ativo?'false':'true'})">${u.acesso_ativo?'Bloquear':'Liberar'}</button></div></td></tr>`).join(''):'<tr><td colspan="5" class="admin-empty">Nenhum usuário encontrado.</td></tr>';
   atualizarDashboardAdmin();
 }
 
@@ -2691,14 +2796,14 @@ async function alterarTipoAdmin(id,tipo){if(!ehAdmin())return;const {error}=awai
 function editarPerfilAdmin(u){
   if(!ehAdmin())return; document.getElementById('adminEditModal')?.remove();
   const modal=document.createElement('div');modal.id='adminEditModal';modal.className='admin-overlay';
-  modal.innerHTML=`<div class="admin-panel" style="max-width:700px;min-height:auto;margin-top:25px"><div class="admin-top"><div><h2>👤 Editar usuário</h2><p>${esc(u.email||'')}</p></div><button class="admin-close" onclick="document.getElementById('adminEditModal').remove()">Fechar</button></div><div class="admin-body"><div class="admin-card"><div class="admin-edit-grid"><div><label>Nome</label><input id="admNome" value="${esc(u.nome||'')}"></div><div><label>E-mail</label><input value="${esc(u.email||'')}" disabled></div><div><label>Tipo</label><select id="admTipo"><option value="admin">admin</option><option value="distribuidor">distribuidor</option><option value="salão">salão</option></select></div><div><label>Acesso</label><select id="admAcesso"><option value="true">Ativo</option><option value="false">Bloqueado</option></select></div><div><label>Mensalidade</label><input id="admMensalidade" type="number" min="0" step="0.01" value="${u.mensalidade??''}"></div><div><label>Vencimento</label><input id="admVencimento" type="date" value="${u.vencimento?String(u.vencimento).slice(0,10):''}"></div></div><button class="primary" style="width:100%;margin-top:12px" onclick="salvarPerfilAdmin('${u.id}')">Salvar alterações</button></div></div></div>`;
+  modal.innerHTML=`<div class="admin-panel" style="max-width:700px;min-height:auto;margin-top:25px"><div class="admin-top"><div><h2>👤 Editar usuário</h2><p>${esc(u.email||'')}</p></div><button class="admin-close" onclick="document.getElementById('adminEditModal').remove()">Fechar</button></div><div class="admin-body"><div class="admin-card"><div class="admin-edit-grid"><div><label>Nome</label><input id="admNome" value="${esc(u.nome||'')}"></div><div><label>E-mail</label><input value="${esc(u.email||'')}" disabled></div><div><label>Tipo</label><select id="admTipo"><option value="admin">Administrador</option><option value="funcionario">Funcionário</option></select></div><div><label>Acesso</label><select id="admAcesso"><option value="true">Ativo</option><option value="false">Bloqueado</option></select></div></div><button class="primary" style="width:100%;margin-top:12px" onclick="salvarPerfilAdmin('${u.id}')">Salvar alterações</button></div></div></div>`;
   document.body.appendChild(modal);document.getElementById('admTipo').value=u.tipo||'usuario';document.getElementById('admAcesso').value=u.acesso_ativo?'true':'false';
 }
-async function salvarPerfilAdmin(id){if(!ehAdmin())return;const payload={nome:document.getElementById('admNome').value.trim(),tipo:document.getElementById('admTipo').value,acesso_ativo:document.getElementById('admAcesso').value==='true',mensalidade:document.getElementById('admMensalidade').value===''?null:Number(document.getElementById('admMensalidade').value),vencimento:document.getElementById('admVencimento').value||null};const {error}=await supabaseClient.from('perfis').update(payload).eq('id',id);if(error){alert('Não foi possível salvar: '+error.message);return}document.getElementById('adminEditModal')?.remove();carregarUsuariosAdmin();alert('Usuário atualizado com sucesso.');}
+async function salvarPerfilAdmin(id){if(!ehAdmin())return;const payload={nome:document.getElementById('admNome').value.trim(),tipo:document.getElementById('admTipo').value,acesso_ativo:document.getElementById('admAcesso').value==='true'};const {error}=await supabaseClient.from('perfis').update(payload).eq('id',id);if(error){alert('Não foi possível salvar: '+error.message);return}document.getElementById('adminEditModal')?.remove();carregarUsuariosAdmin();alert('Usuário atualizado com sucesso.');}
 
 function getAdminProducts(){try{return JSON.parse(localStorage.getItem('consulta_anuar_admin_products')||'null')||products.map(p=>({...p,category:p.category||'Sem categoria',active:true}));}catch(e){return products.map(p=>({...p,category:p.category||'Sem categoria',active:true}));}}
 function saveAdminProducts(list){localStorage.setItem('consulta_anuar_admin_products',JSON.stringify(list));}
-function carregarProdutosAdmin(){if(!ehAdmin())return;const body=document.getElementById('adminProdutosBody');if(!body)return;const q=(document.getElementById('adminProdutoBusca')?.value||'').toLowerCase().trim();const list=getAdminProducts().filter(p=>!q||`${p.code} ${p.name} ${p.size||''} ${p.category||''}`.toLowerCase().includes(q));body.innerHTML=list.length?list.map(p=>`<tr><td>${esc(p.code||'')}</td><td>${esc(p.name||'')}<div class="admin-muted">${esc(p.size||'')}</div></td><td>${esc(p.category||'Sem categoria')}</td><td>${brl(p.price)}</td><td>${p.salonPrice==null?'—':brl(p.salonPrice)}</td><td><span class="admin-badge ${p.active!==false?'ok':'block'}">${p.active!==false?'Ativo':'Inativo'}</span></td><td><div class="admin-actions"><button class="secondary mini" onclick='editarProdutoAdmin(${JSON.stringify(p)})'>Editar</button><button class="${p.active!==false?'secondary':'green'} mini" onclick="alternarProdutoAdmin('${p.id}')">${p.active!==false?'Desativar':'Ativar'}</button><button class="admin-danger mini" onclick="excluirProdutoAdmin('${p.id}')">Excluir</button></div></td></tr>`).join(''):'<tr><td colspan="7" class="admin-empty">Nenhum produto encontrado.</td></tr>';}
+function carregarProdutosAdmin(){if(!ehAdmin())return;const body=document.getElementById('adminProdutosBody');if(!body)return;const q=(document.getElementById('adminProdutoBusca')?.value||'').toLowerCase().trim();const list=getAdminProducts().filter(p=>!q||`${p.code} ${p.name} ${p.size||''} ${p.category||''}`.toLowerCase().includes(q));body.innerHTML=list.length?list.map(p=>`<tr><td>${imagemProdutoHtml(p.code,'admin-product-image')}</td><td>${esc(p.code||'')}</td><td>${esc(p.name||'')}<div class="admin-muted">${esc(p.size||'')}</div></td><td>${esc(p.category||'Sem categoria')}</td><td>${brl(p.price)}</td><td>${p.salonPrice==null?'—':brl(p.salonPrice)}</td><td><span class="admin-badge ${p.active!==false?'ok':'block'}">${p.active!==false?'Ativo':'Inativo'}</span></td><td><div class="admin-image-actions"><label class="secondary mini" for="imagemProduto-${esc(p.code)}">${produtoImagens.has(String(p.code))?'Alterar foto':'Adicionar foto'}</label>${produtoImagens.has(String(p.code))?`<button class="admin-danger mini" onclick="removerImagemProduto('${esc(p.code)}')">Remover foto</button>`:''}<input id="imagemProduto-${esc(p.code)}" type="file" accept="image/*" onclick="this.value=''" onchange="prepararImagemProduto('${esc(p.code)}',this)"><div id="imagemInfo-${esc(p.code)}" class="admin-photo-preview" aria-live="polite"></div><div id="imagemAcoes-${esc(p.code)}" class="admin-photo-actions" style="display:none"><button id="salvarImagem-${esc(p.code)}" class="save" type="button" onclick="confirmarImagemProduto('${esc(p.code)}')">Salvar foto</button><button type="button" class="secondary" onclick="cancelarImagemProduto('${esc(p.code)}')">Cancelar</button></div></div><div class="admin-actions" style="margin-top:6px"><button class="secondary mini" onclick='editarProdutoAdmin(${JSON.stringify(p)})'>Editar</button><button class="${p.active!==false?'secondary':'green'} mini" onclick="alternarProdutoAdmin('${p.id}')">${p.active!==false?'Desativar':'Ativar'}</button><button class="admin-danger mini" onclick="excluirProdutoAdmin('${p.id}')">Excluir</button></div></td></tr>`).join(''):'<tr><td colspan="8" class="admin-empty">Nenhum produto encontrado.</td></tr>';}
 function novoProdutoAdmin(){editarProdutoAdmin({id:'novo-'+Date.now(),code:'',name:'',size:'',category:'',price:0,salonPrice:null,active:true,isNew:true});}
 function editarProdutoAdmin(p){if(!ehAdmin())return;document.getElementById('adminEditProduto')?.remove();const m=document.createElement('div');m.id='adminEditProduto';m.className='admin-overlay';m.innerHTML=`<div class="admin-panel" style="max-width:650px;min-height:auto;margin-top:25px"><div class="admin-top"><div><h2>📦 ${p.isNew?'Cadastrar':'Editar'} produto</h2></div><button class="admin-close" onclick="this.closest('.admin-overlay').remove()">Fechar</button></div><div class="admin-body"><div class="admin-card"><div class="admin-edit-grid"><div><label>Código</label><input id="apCode" value="${esc(p.code||'')}"></div><div><label>Categoria</label><input id="apCat" value="${esc(p.category||'')}"></div><div class="full"><label>Nome</label><input id="apName" value="${esc(p.name||'')}"></div><div><label>Tamanho</label><input id="apSize" value="${esc(p.size||'')}"></div><div><label>Preço Distribuidor</label><input id="apPrice" type="number" step="0.01" min="0" value="${p.price??0}"></div><div><label>Preço Salão Bahia</label><input id="apSalon" type="number" step="0.01" min="0" value="${p.salonPrice??''}"></div><div><label>Status</label><select id="apActive"><option value="true">Ativo</option><option value="false">Inativo</option></select></div></div><button class="primary" style="width:100%;margin-top:12px" onclick="salvarProdutoAdmin('${p.id}',${p.isNew?'true':'false'})">Salvar produto</button></div></div></div>`;document.body.appendChild(m);document.getElementById('apActive').value=p.active===false?'false':'true';}
 function salvarProdutoAdmin(id,isNew){if(!ehAdmin())return;const list=getAdminProducts();const obj={id:isNew?'prod-'+Date.now():id,code:document.getElementById('apCode').value.trim(),name:document.getElementById('apName').value.trim(),size:document.getElementById('apSize').value.trim(),category:document.getElementById('apCat').value.trim()||'Sem categoria',price:Number(document.getElementById('apPrice').value)||0,salonPrice:document.getElementById('apSalon').value===''?null:Number(document.getElementById('apSalon').value),active:document.getElementById('apActive').value==='true'};if(!obj.code||!obj.name){alert('Informe código e nome.');return}const i=list.findIndex(x=>x.id===id);if(isNew||i<0)list.push(obj);else list[i]=obj;saveAdminProducts(list);document.getElementById('adminEditProduto')?.remove();carregarProdutosAdmin();alert('Produto salvo neste navegador.');}
@@ -2708,28 +2813,18 @@ function excluirProdutoAdmin(id){if(!ehAdmin())return;if(!confirm('Excluir este 
 function getAdminOrders(){try{return JSON.parse(localStorage.getItem('consulta_anuar_pedidos')||'[]');}catch(e){return[]}}
 function saveAdminOrders(v){localStorage.setItem('consulta_anuar_pedidos',JSON.stringify(v));}
 function registrarPedidoAdmin(){if(!order.length)return null;const d=getDiscount();const pedido={id:'PED-'+Date.now(),cliente:document.getElementById('client').value.trim()||'Cliente',data:document.getElementById('date').value||new Date().toISOString().slice(0,10),produtos:order.map(x=>({id:x.id,code:x.code,name:x.name,qty:x.qty,unit:x.unit,table:x.table})),desconto:d.discount,total:d.total,status:'pendente'};const pedidos=getAdminOrders();pedidos.unshift(pedido);saveAdminOrders(pedidos);return pedido;}
-function carregarPedidosAdmin(){if(!ehAdmin())return;const body=document.getElementById('adminPedidosBody');if(!body)return;const q=(document.getElementById('adminPedidoBusca')?.value||'').toLowerCase().trim(),f=document.getElementById('adminPedidoStatus')?.value||'todos';const list=getAdminOrders().filter(p=>(!q||`${p.cliente} ${p.data}`.toLowerCase().includes(q))&&(f==='todos'||p.status===f));body.innerHTML=list.length?list.map(p=>`<tr><td>${esc(p.cliente)}</td><td>${formatarDataAdmin(p.data)}</td><td>${p.produtos?.reduce((s,x)=>s+x.qty,0)||0} item(s)</td><td>${brl(p.desconto||0)}</td><td>${brl(p.total||0)}</td><td><select onchange="alterarStatusPedidoAdmin('${p.id}',this.value)"><option value="pendente" ${p.status==='pendente'?'selected':''}>Pendente</option><option value="processando" ${p.status==='processando'?'selected':''}>Processando</option><option value="concluido" ${p.status==='concluido'?'selected':''}>Concluído</option><option value="cancelado" ${p.status==='cancelado'?'selected':''}>Cancelado</option></select></td><td><button class="admin-danger mini" onclick="excluirPedidoAdmin('${p.id}')">Excluir</button></td></tr>`).join(''):'<tr><td colspan="7" class="admin-empty">Nenhum pedido registrado neste navegador.</td></tr>';}
-function alterarStatusPedidoAdmin(id,status){const l=getAdminOrders();const p=l.find(x=>x.id===id);if(p){p.status=status;saveAdminOrders(l);carregarPedidosAdmin();}}
-function excluirPedidoAdmin(id){if(!confirm('Excluir este pedido?'))return;saveAdminOrders(getAdminOrders().filter(x=>x.id!==id));carregarPedidosAdmin();}
-function carregarFaturamentoAdmin(){if(!ehAdmin())return;supabaseClient.from('perfis').select('id,nome,email,mensalidade,vencimento,acesso_ativo').then(({data,error})=>{const body=document.getElementById('adminFaturamentoBody');if(error||!body){return}const rows=data.filter(u=>u.mensalidade!=null||u.vencimento);const atras=rows.filter(u=>vencimentoStatus(u.vencimento,u.acesso_ativo)==='Inadimplente').length;document.getElementById('fatTotal').textContent=rows.length;document.getElementById('fatAtrasadas').textContent=atras;document.getElementById('fatBloqueados').textContent=data.filter(u=>!u.acesso_ativo).length;body.innerHTML=rows.length?rows.map(u=>{const st=vencimentoStatus(u.vencimento,u.acesso_ativo);return `<tr><td>${esc(u.nome||u.email||'—')}</td><td>${brl(u.mensalidade||0)}</td><td>${formatarDataAdmin(u.vencimento)}</td><td><span class="admin-pill ${statusClass(st)}">${st}</span></td><td><button class="secondary mini" onclick='editarPerfilAdmin(${JSON.stringify(u)})'>Editar</button></td></tr>`}).join(''):'<tr><td colspan="5" class="admin-empty">Nenhuma mensalidade cadastrada.</td></tr>';});}
-
-
 async function cadastrarNovoUsuario(){
   if(!ehAdmin()){alert("Acesso restrito ao administrador.");return;}
   const nome=document.getElementById("novoUsuarioNome")?.value.trim()||"";
   const email=document.getElementById("novoUsuarioEmail")?.value.trim().toLowerCase()||"";
   const senha=document.getElementById("novoUsuarioSenha")?.value||"";
-  const tipo=document.getElementById("novoUsuarioTipo")?.value||"salão";
-  const mensalidade=document.getElementById("novoUsuarioMensalidade")?.value||"";
-  const vencimento=document.getElementById("novoUsuarioVencimento")?.value||"";
+  const tipo=document.getElementById("novoUsuarioTipo")?.value||"funcionario";
   const acesso_ativo=document.getElementById("novoUsuarioAcesso")?.checked===true;
   const msg=document.getElementById("novoUsuarioMensagem");
   if(!msg)return;
   if(!nome||!email||!senha){msg.style.color="#b00020";msg.textContent="Preencha nome, e-mail e senha.";return;}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg.style.color="#b00020";msg.textContent="Informe um e-mail válido.";return;}
   if(senha.length<6){msg.style.color="#b00020";msg.textContent="A senha precisa ter pelo menos 6 caracteres.";return;}
-  const valorMensalidade=mensalidade===""?null:Number(String(mensalidade).replace(",","."));
-  if(valorMensalidade!==null && (!Number.isFinite(valorMensalidade)||valorMensalidade<0)){msg.style.color="#b00020";msg.textContent="Mensalidade inválida.";return;}
   msg.style.color="#555";msg.textContent="Cadastrando usuário...";
   const botao=document.querySelector('button[onclick="cadastrarNovoUsuario()"]');
   if(botao){botao.disabled=true;botao.dataset.oldText=botao.textContent;botao.textContent="Cadastrando...";}
@@ -2739,16 +2834,25 @@ async function cadastrarNovoUsuario(){
     if(!accessToken) throw new Error("Sessão administrativa não encontrada. Entre novamente como administrador.");
     const {data,error}=await supabaseClient.functions.invoke("cadastrar-usuario",{
       headers:{Authorization:`Bearer ${accessToken}`},
-      body:{nome,email,senha,tipo,acesso_ativo,mensalidade:valorMensalidade,vencimento:vencimento||null}
+      body:{nome,email,senha,tipo,acesso_ativo}
     });
     if(error){
-      let detalhe=error.message||"Não foi possível cadastrar.";
-      try{const body=await error.context?.json?.();if(body?.error)detalhe=body.error;}catch(_e){}
-      throw new Error(detalhe);
+      const ocultarSegredos=texto=>String(texto).replace(/("?(?:access_token|refresh_token|token|password|senha|authorization)"?\s*:\s*)("[^"]*"|'[^']*'|[^,}\s]+)/gi,'$1[oculto]').replace(/Bearer\s+[^\s"']+/gi,'Bearer [oculto]');
+      const contexto=error.context;
+      let corpo="";
+      if(contexto){
+        try{const resposta=typeof contexto.clone==='function'?contexto.clone():contexto;corpo=await resposta.text();}catch(_e){corpo="Não foi possível ler o corpo da resposta.";}
+      }
+      const detalhes=[
+        error.message||"Não foi possível cadastrar.",
+        contexto?.status?`HTTP ${contexto.status}${contexto.statusText?` ${contexto.statusText}`:''}`:'',
+        corpo?`Resposta: ${ocultarSegredos(corpo)}`:''
+      ].filter(Boolean).join(' | ');
+      throw new Error(ocultarSegredos(detalhes));
     }
     if(data?.error)throw new Error(data.error);
     msg.style.color="#176b31";msg.textContent="Usuário cadastrado com sucesso!";
-    ["novoUsuarioNome","novoUsuarioEmail","novoUsuarioSenha","novoUsuarioMensalidade","novoUsuarioVencimento"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+    ["novoUsuarioNome","novoUsuarioEmail","novoUsuarioSenha"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
     const ac=document.getElementById("novoUsuarioAcesso");if(ac)ac.checked=true;
     await carregarUsuariosAdmin();
     await atualizarDashboardAdmin();
@@ -2811,7 +2915,7 @@ function gerarPDFFaturamento(){
     const d=getDiscount();
     const cliente=(document.getElementById("client")?.value||"Cliente").trim()||"Cliente";
     const dataCampo=document.getElementById("date")?.value||"";
-    const dataBr=dataCampo?dataCampo.split("-").reverse().join("/"):new Date().toLocaleDateString("pt-BR");
+    const dataBr=formatarDataVisual(dataCampo)||formatarDataVisual(new Date().toISOString().slice(0,10));
     const tabela=table==="salon"?"Salão Bahia":"Distribuidor";
     const brlPdf=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
