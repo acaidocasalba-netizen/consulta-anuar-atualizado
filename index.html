@@ -181,9 +181,7 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
       <div class="summary-line total"><span>Total</span><span id="total">R$ 0,00</span></div>
     </div>
     <div class="actions">
-      <button class="primary" onclick="generateInvoice()">Gerar faturamento</button>
-      <button class="secondary" onclick="gerarPDFFaturamento()">📄 Gerar PDF</button>
-      <button class="green" onclick="sendWhatsApp()">Enviar pelo WhatsApp</button>
+      <button class="primary" onclick="gerarPDFFaturamento()">Gerar faturamento</button>
     </div>
     <button class="secondary" style="width:100%;margin-top:8px" onclick="clearOrder()">Limpar pedido</button>
   </div>
@@ -2475,23 +2473,6 @@ function mostrarLogin() {
         Entrar
       </button>
 
-      <button
-        onclick="criarConta()"
-        style="
-          width:100%;
-          padding:14px;
-          margin-top:10px;
-          background:white;
-          color:#111;
-          border:1px solid #111;
-          border-radius:8px;
-          font-size:16px;
-          cursor:pointer;
-        "
-      >
-        Criar conta
-      </button>
-
       <p
         id="loginMensagem"
         style="
@@ -2546,11 +2527,7 @@ function liberarSite() {
 
 async function verificarAcesso() {
 
-  // Mostra o login imediatamente para impedir que a tela inicial apareça antes dele.
   mostrarLogin();
-
-  // Para obrigar o login sempre que o site for aberto,
-  // encerramos qualquer sessão anterior.
   await supabaseClient.auth.signOut();
 
   sessionStorage.removeItem("consulta_anuar_logado");
@@ -2558,12 +2535,7 @@ async function verificarAcesso() {
 }
 
 
-/* ================================
-   ENTRAR
-================================ */
-
 async function entrar() {
-
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value;
   const mensagem = document.getElementById("loginMensagem");
@@ -2631,57 +2603,6 @@ if (!perfil || perfil.acesso_ativo !== true) {
   configurarMenuAdmin(perfil);
   carregarImagensProdutos();
   
-}
-
-
-/* ================================
-   CRIAR CONTA
-================================ */
-
-async function criarConta() {
-
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
-  const mensagem = document.getElementById("loginMensagem");
-
-  mensagem.style.color = "#d00";
-
-  if (!email || !password) {
-    mensagem.textContent =
-      "Informe e-mail e senha.";
-
-    return;
-  }
-
-  if (password.length < 6) {
-    mensagem.textContent =
-      "A senha precisa ter pelo menos 6 caracteres.";
-
-    return;
-  }
-
-  mensagem.textContent = "Criando conta...";
-
-  const { error } =
-    await supabaseClient.auth.signUp({
-      email: email,
-      password: password
-    });
-
-  if (error) {
-
-    console.error(error);
-
-    mensagem.textContent =
-      error.message;
-
-    return;
-  }
-
-  mensagem.style.color = "green";
-
-  mensagem.textContent =
-    "Conta criada! Verifique seu e-mail para confirmar.";
 }
 
 
@@ -2911,6 +2832,7 @@ document.addEventListener("keydown", function(e){
 <script>
 function gerarPDFFaturamento(){
   if(!Array.isArray(order)||!order.length){alert("Adicione pelo menos um produto antes de gerar o PDF.");return;}
+  try{registrarPedidoAdmin()}catch(e){console.error("PEDIDO:",e)}
   if(!window.jspdf||!window.jspdf.jsPDF){alert("O gerador de PDF ainda está carregando. Tente novamente.");return;}
   try{
     const {jsPDF}=window.jspdf, doc=new jsPDF({unit:"mm",format:"a4"});
