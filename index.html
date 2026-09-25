@@ -2223,12 +2223,11 @@ function imagemProdutoHtml(codigo,classe='product-image'){
 function searchProducts(){
  const q=document.getElementById('search').value.trim().toLowerCase(),box=document.getElementById('results');
  if(!q){box.innerHTML='<div class="empty">Digite o código ou nome para pesquisar.</div>';return}
- const found=products.filter(p=>{const hay=(p.code+' '+p.name+' '+p.size).toLowerCase();return hay.includes(q)&&(table==='dist'||p.salonPrice!==null)}).slice(0,50);
+const found=getAdminProducts().filter(p=>p.active!==false).filter(p=>{const hay=(p.code+' '+p.name+' '+p.size).toLowerCase();return hay.includes(q)&&(table==='dist'||p.salonPrice!==null)}).slice(0,50);s
  if(!found.length){box.innerHTML='<div class="empty">Nenhum produto encontrado.</div>';return}
  box.innerHTML=found.map(p=>`<div class="product product-result">${imagemProdutoHtml(p.code)}<div><h3>${esc(p.name)}</h3><div class="meta">Código ${p.code}${p.size?' • '+esc(p.size):''}</div><div class="prices">Preço: <span class="price">${brl(priceOf(p))}</span>${table==='dist'&&p.salonPrice!==null?` <span class="badge">Salão Bahia: ${brl(p.salonPrice)}</span>`:''}</div></div><button class="primary" onclick="addProduct('${p.id}')">Adicionar</button></div>`).join('')
 }
 function addProduct(id){const p=products.find(x=>x.id===id);if(!p)return;const existing=order.find(x=>x.id===id&&x.table===table);if(existing)existing.qty++;else order.push({id:p.id,code:p.code,name:p.name,size:p.size,qty:1,unit:priceOf(p),table});renderOrder()}
-function getDiscount(){const subtotal=order.reduce((s,x)=>s+x.unit*x.qty,0);let v=Math.max(0,parseFloat(document.getElementById('discountValue').value)||0);const type=document.getElementById('discountType').value;let discount=type==='percent'?subtotal*Math.min(v,100)/100:Math.min(v,subtotal);return {subtotal,discount,total:Math.max(0,subtotal-discount),type,value:v}}
 function renderOrder(){
  const box=document.getElementById('order');
  if(!order.length)box.innerHTML='<div class="empty">Nenhum produto adicionado.</div>';else box.innerHTML=order.map((x,i)=>`<div class="order-row"><div><b>${esc(x.name)}</b><div class="meta">Código ${x.code}${x.size?' • '+esc(x.size):''} • ${x.table==='salon'?'Salão Bahia':'Distribuidor'}</div></div><input class="qty" type="number" min="1" value="${x.qty}" onchange="changeQty(${i},this.value)"><b>${brl(x.unit*x.qty)}</b><button class="secondary" onclick="removeItem(${i})">×</button></div>`).join('');
