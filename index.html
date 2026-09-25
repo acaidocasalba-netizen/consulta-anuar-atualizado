@@ -2223,7 +2223,7 @@ function imagemProdutoHtml(codigo,classe='product-image'){
 function searchProducts(){
  const q=document.getElementById('search').value.trim().toLowerCase(),box=document.getElementById('results');
  if(!q){box.innerHTML='<div class="empty">Digite o código ou nome para pesquisar.</div>';return}
-const found=getAdminProducts().filter(p=>p.active!==false).filter(p=>{const hay=(p.code+' '+p.name+' '+p.size).toLowerCase();return hay.includes(q)&&(table==='dist'||p.salonPrice!==null)}).slice(0,50);s
+const found=getAdminProducts().filter(p=>p.active!==false).filter(p=>{const hay=(p.code+' '+p.name+' '+p.size).toLowerCase();return hay.includes(q)&&(table==='dist'||p.salonPrice!==null)}).slice(0,50);
  if(!found.length){box.innerHTML='<div class="empty">Nenhum produto encontrado.</div>';return}
  box.innerHTML=found.map(p=>`<div class="product product-result">${imagemProdutoHtml(p.code)}<div><h3>${esc(p.name)}</h3><div class="meta">Código ${p.code}${p.size?' • '+esc(p.size):''}</div><div class="prices">Preço: <span class="price">${brl(priceOf(p))}</span>${table==='dist'&&p.salonPrice!==null?` <span class="badge">Salão Bahia: ${brl(p.salonPrice)}</span>`:''}</div></div><button class="primary" onclick="addProduct('${p.id}')">Adicionar</button></div>`).join('')
 }
