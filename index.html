@@ -8,6 +8,34 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f4f4;color:#151515}body:not(.auth-ready){visibility:hidden}
 .container{max-width:1000px;margin:auto;padding:18px}
+.anuar-painel-pedidos{
+  width:100%;
+  margin:0 0 18px;
+  overflow:hidden;
+  border-radius:14px;
+  line-height:0;
+}
+
+.anuar-painel-pedidos img{
+  display:block;
+  width:100%;
+  height:auto;
+  max-height:320px;
+  object-fit:cover;
+  object-position:center;
+}
+
+@media (max-width:650px){
+  .anuar-painel-pedidos{
+    margin-bottom:14px;
+    border-radius:10px;
+  }
+
+  .anuar-painel-pedidos img{
+    max-height:220px;
+    object-fit:cover;
+  }
+}
 .header{background:#111;color:#fff;border-radius:14px;padding:22px;margin-bottom:14px}
 .header small{opacity:.75}.header h1{margin:6px 0 4px;font-size:28px}.header p{margin:0;opacity:.8}
 .tabs{display:flex;gap:8px;margin-bottom:14px}.tab{flex:1;border:1px solid #ccc;background:#fff;padding:13px;border-radius:10px;font-weight:700}.tab.active{background:#111;color:#fff}
@@ -148,6 +176,12 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
     <a href="#" onclick="fecharMenu();return false;">👤 Minha conta</a>
 
     <a href="#" id="menuAdmin" style="display:none;" onclick="abrirAdministracao();return false;">👑 Administração</a>
+</div>
+<div class="anuar-painel-pedidos">
+  <img
+    src="anuar-painel-pedidos.webp"
+    alt="Anuar Cosméticos"
+  >
 </div>
   <div class="tabs">
     <button id="tabDist" class="tab active" onclick="setTable('dist')">Distribuidor</button>
