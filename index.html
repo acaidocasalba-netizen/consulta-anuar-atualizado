@@ -3397,8 +3397,43 @@ function searchProducts(){
  if(!q){box.innerHTML='<div class="empty">Digite o código ou nome para pesquisar.</div>';return}
 const found=getAdminProducts().filter(p=>p.active!==false).filter(p=>{const hay=(p.code+' '+p.name+' '+p.size).toLowerCase();return hay.includes(q)&&(table==='dist'||p.salonPrice!==null)}).slice(0,50);
  if(!found.length){box.innerHTML='<div class="empty">Nenhum produto encontrado.</div>';return}
- box.innerHTML=found.map(p=>`<div class="product product-result">${imagemProdutoHtml(p.code)}<div><h3>${esc(p.name)}</h3><div class="meta">Código ${p.code}${p.size?' • '+esc(p.size):''}</div><div class="prices">Preço: <span class="price">${brl(priceOf(p))}</span>${table==='dist'&&p.salonPrice!==null?` <span class="badge">Salão Bahia: ${brl(p.salonPrice)}</span>`:''}</div></div><button class="primary" onclick="addProduct('${p.id}')">Adicionar</button></div>`).join('')
+box.innerHTML=`<div class="anuar-product-grid">${found.map(p=>`
+  <div class="anuar-product-card">
+    <div class="anuar-product-photo">
+      ${imagemProdutoHtml(p.code,'anuar-product-image')}
+    </div>
+
+    <div class="anuar-product-content">
+      <div class="anuar-product-code">CÓD. ${esc(p.code)}</div>
+
+      <h3 class="anuar-product-name">${esc(p.name)}</h3>
+
+      ${p.size?`<div class="anuar-product-size">${esc(p.size)}</div>`:''}
+
+      <div class="anuar-product-bottom">
+        <div>
+          <small>Preço</small>
+          <strong>${brl(priceOf(p))}</strong>
+          ${table==='dist'&&p.salonPrice!==null?`
+            <div class="anuar-product-secondary">
+              Salão Bahia: ${brl(p.salonPrice)}
+            </div>
+          `:''}
+        </div>
+
+        <button
+          type="button"
+          class="anuar-product-add"
+          onclick="addProduct('${p.id}')"
+          aria-label="Adicionar produto">
+          ＋
+        </button>
+      </div>
+    </div>
+  </div>
+`).join('')}</div>`; 
 }
+
 function addProduct(id){
   const p=products.find(x=>x.id===id);
   if(!p)return;
