@@ -2438,6 +2438,69 @@ function abrirPedidos(){
   document.body.appendChild(overlay);
   carregarPedidosUsuario();
 }
+async function salvarPedidoNoSupabase(){
+  try{
+    const {data:{user},error:userError}=await supabaseClient.auth.getUser();
+
+    if(userError||!user){
+      alert("Sua sessão não está ativa. Entre novamente para salvar o pedido.");
+      return null;
+    }
+
+    const d=getDiscount();
+
+    const cliente=(document.getElementById("client")?.value||"Cliente").trim()||"Cliente";
+    const dataPedido=document.getElementById("date")?.value||new Date().toISOString().slice(0,10);
+    const tipoDesconto=document.getElementById("discountType")?.value||"percent";
+    const valorDesconto=Math.max(0,Number(document.getElementById("discountValue")?.value)||0);
+
+    const tabela=table==="salon"?"Salão Bahia":"Distribuidor";
+
+    const produtos=order.map(x=>({
+      id:x.id,
+      code:x.code,
+      name:x.name,
+      size:x.size||"",
+      qty:Math.max(1,Number(x.qty)||1),
+      unit:Number(x.unit)||0,
+      total:(Number(x.unit)||0)*Math.max(1,Number(x.qty)||1),
+      table:x.table
+    }));
+
+    const dados={
+      user_id:user.id,
+      cliente,
+      data:dataPedido,
+      tabela,
+      produtos,
+      subtotal:Number(d.subtotal)||0,
+      desconto:Number(d.discount)||0,
+      desconto_tipo:tipoDesconto,
+      desconto_valor:valorDesconto,
+      total:Number(d.total)||0,
+      status:"pendente"
+    };
+
+    const {data,error}=await supabaseClient
+      .from("pedidos")
+      .insert(dados)
+      .select("id,criado_em")
+      .single();
+
+    if(error){
+      console.error("ERRO AO SALVAR PEDIDO:",error);
+      alert("Não foi possível salvar o pedido no histórico.");
+      return null;
+    }
+
+    return data;
+
+  }catch(e){
+    console.error("ERRO AO SALVAR PEDIDO:",e);
+    alert("Não foi possível salvar o pedido no histórico.");
+    return null;
+  }
+}
 </script>
 <<!-- SUPABASE AUTH -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
