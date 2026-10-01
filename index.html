@@ -2552,11 +2552,44 @@ async function salvarPedidoNoSupabase(){
       status:"pendente"
     };
 
-    const {data,error}=await supabaseClient
-      .from("pedidos")
-      .insert(dados)
-      .select("id,criado_em")
-      .single();
+    let data;
+let error;
+
+if(pedidoEmEdicaoId){
+
+  const resultado=await supabaseClient
+    .from("pedidos")
+    .update({
+      cliente,
+      data:dataPedido,
+      tabela,
+      produtos,
+      subtotal:Number(d.subtotal)||0,
+      desconto:Number(d.discount)||0,
+      desconto_tipo:tipoDesconto,
+      desconto_valor:valorDesconto,
+      total:Number(d.total)||0,
+      atualizado_em:new Date().toISOString()
+    })
+    .eq("id",pedidoEmEdicaoId)
+    .eq("user_id",user.id)
+    .select("id,criado_em,atualizado_em")
+    .single();
+
+  data=resultado.data;
+  error=resultado.error;
+
+}else{
+
+  const resultado=await supabaseClient
+    .from("pedidos")
+    .insert(dados)
+    .select("id,criado_em,atualizado_em")
+    .single();
+
+  data=resultado.data;
+  error=resultado.error;
+}
 
     if(error){
       console.error("ERRO AO SALVAR PEDIDO:",error);
