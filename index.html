@@ -3211,7 +3211,132 @@ async function salvarPerfilAdmin(id){if(!ehAdmin())return;const payload={nome:do
 
 function getAdminProducts(){try{return JSON.parse(localStorage.getItem('consulta_anuar_admin_products')||'null')||products.map(p=>({...p,category:p.category||'Sem categoria',active:true}));}catch(e){return products.map(p=>({...p,category:p.category||'Sem categoria',active:true}));}}
 function saveAdminProducts(list){localStorage.setItem('consulta_anuar_admin_products',JSON.stringify(list));}
-function carregarProdutosAdmin(){if(!ehAdmin())return;const body=document.getElementById('adminProdutosBody');if(!body)return;const q=(document.getElementById('adminProdutoBusca')?.value||'').toLowerCase().trim();const list=getAdminProducts().filter(p=>!q||`${p.code} ${p.name} ${p.size||''} ${p.category||''}`.toLowerCase().includes(q));body.innerHTML=list.length?list.map(p=>`<tr><td>${imagemProdutoHtml(p.code,'admin-product-image')}</td><td>${esc(p.code||'')}</td><td>${esc(p.name||'')}<div class="admin-muted">${esc(p.size||'')}</div></td><td>${esc(p.category||'Sem categoria')}</td><td>${brl(p.price)}</td><td>${p.salonPrice==null?'—':brl(p.salonPrice)}</td><td><span class="admin-badge ${p.active!==false?'ok':'block'}">${p.active!==false?'Ativo':'Inativo'}</span></td><td><div class="admin-image-actions"><label class="secondary mini" for="imagemProduto-${esc(p.code)}">${produtoImagens.has(String(p.code))?'Alterar foto':'Adicionar foto'}</label>${produtoImagens.has(String(p.code))?`<button class="admin-danger mini" onclick="removerImagemProduto('${esc(p.code)}')">Remover foto</button>`:''}<input id="imagemProduto-${esc(p.code)}" type="file" accept="image/*" onclick="this.value=''" onchange="prepararImagemProduto('${esc(p.code)}',this)"><div id="imagemInfo-${esc(p.code)}" class="admin-photo-preview" aria-live="polite"></div><div id="imagemAcoes-${esc(p.code)}" class="admin-photo-actions" style="display:none"><button id="salvarImagem-${esc(p.code)}" class="save" type="button" onclick="confirmarImagemProduto('${esc(p.code)}')">Salvar foto</button><button type="button" class="secondary" onclick="cancelarImagemProduto('${esc(p.code)}')">Cancelar</button></div></div><div class="admin-actions" style="margin-top:6px"><button class="secondary mini" onclick='editarProdutoAdmin(${JSON.stringify(p)})'>Editar</button><button class="${p.active!==false?'secondary':'green'} mini" onclick="alternarProdutoAdmin('${p.id}')">${p.active!==false?'Desativar':'Ativar'}</button><button class="admin-danger mini" onclick="excluirProdutoAdmin('${p.id}')">Excluir</button></div></td></tr>`).join(''):'<tr><td colspan="8" class="admin-empty">Nenhum produto encontrado.</td></tr>';}
+function carregarProdutosAdmin(){
+  if(!ehAdmin())return;
+
+  const body=document.getElementById('adminProdutosBody');
+  if(!body)return;
+
+  const q=(document.getElementById('adminProdutoBusca')?.value||'').toLowerCase().trim();
+
+  const list=getAdminProducts().filter(p=>
+    !q||`${p.code} ${p.name} ${p.size||''} ${p.category||''}`.toLowerCase().includes(q)
+  );
+
+  body.innerHTML=list.length?list.map(p=>`
+    <tr>
+      <td>${imagemProdutoHtml(p.code,'admin-product-image')}</td>
+
+      <td>${esc(p.code||'')}</td>
+
+      <td>
+        ${esc(p.name||'')}
+        <div class="admin-muted">${esc(p.size||'')}</div>
+      </td>
+
+      <td>${esc(p.category||'Sem categoria')}</td>
+
+      <td>${brl(p.price)}</td>
+
+      <td>${p.salonPrice==null?'—':brl(p.salonPrice)}</td>
+
+      <td>
+        <span class="admin-badge ${p.active!==false?'ok':'block'}">
+          ${p.active!==false?'Ativo':'Inativo'}
+        </span>
+      </td>
+
+      <td>
+
+        <div class="admin-product-menu-wrap">
+
+          <button
+            type="button"
+            class="admin-product-menu-button"
+            onclick="this.nextElementSibling.classList.toggle('open')">
+            ⋮ Ações
+          </button>
+
+          <div class="admin-product-menu">
+
+            <label
+              for="imagemProduto-${esc(p.code)}"
+              onclick="this.closest('.admin-product-menu').classList.remove('open')">
+              📷 ${produtoImagens.has(String(p.code))?'Alterar foto':'Adicionar foto'}
+            </label>
+
+            ${produtoImagens.has(String(p.code))?`
+              <button
+                type="button"
+                onclick="this.closest('.admin-product-menu').classList.remove('open');removerImagemProduto('${esc(p.code)}')">
+                🗑️ Remover foto
+              </button>
+            `:''}
+
+            <button
+              type="button"
+              onclick="this.closest('.admin-product-menu').classList.remove('open');editarProdutoAdmin(${JSON.stringify(p)})">
+              ✏️ Editar
+            </button>
+
+            <button
+              type="button"
+              class="${p.active!==false?'':'success'}"
+              onclick="this.closest('.admin-product-menu').classList.remove('open');alternarProdutoAdmin('${p.id}')">
+              ${p.active!==false?'⏸️ Desativar':'▶️ Ativar'}
+            </button>
+
+            <button
+              type="button"
+              class="danger"
+              onclick="this.closest('.admin-product-menu').classList.remove('open');excluirProdutoAdmin('${p.id}')">
+              ❌ Excluir
+            </button>
+
+          </div>
+
+        </div>
+
+        <input
+          id="imagemProduto-${esc(p.code)}"
+          type="file"
+          accept="image/*"
+          onclick="this.value=''"
+          onchange="prepararImagemProduto('${esc(p.code)}',this)"
+          style="display:none">
+
+        <div
+          id="imagemInfo-${esc(p.code)}"
+          class="admin-photo-preview"
+          aria-live="polite">
+        </div>
+
+        <div
+          id="imagemAcoes-${esc(p.code)}"
+          class="admin-photo-actions"
+          style="display:none">
+
+          <button
+            id="salvarImagem-${esc(p.code)}"
+            class="save"
+            type="button"
+            onclick="confirmarImagemProduto('${esc(p.code)}')">
+            Salvar foto
+          </button>
+
+          <button
+            type="button"
+            class="secondary"
+            onclick="cancelarImagemProduto('${esc(p.code)}')">
+            Cancelar
+          </button>
+
+        </div>
+
+      </td>
+    </tr>
+  `).join(''):'<tr><td colspan="8" class="admin-empty">Nenhum produto encontrado.</td></tr>';
+}
 function novoProdutoAdmin(){editarProdutoAdmin({id:'novo-'+Date.now(),code:'',name:'',size:'',category:'',price:0,salonPrice:null,active:true,isNew:true});}
 function editarProdutoAdmin(p){if(!ehAdmin())return;document.getElementById('adminEditProduto')?.remove();const m=document.createElement('div');m.id='adminEditProduto';m.className='admin-overlay';m.innerHTML=`<div class="admin-panel" style="max-width:650px;min-height:auto;margin-top:25px"><div class="admin-top"><div><h2>📦 ${p.isNew?'Cadastrar':'Editar'} produto</h2></div><button class="admin-close" onclick="this.closest('.admin-overlay').remove()">Fechar</button></div><div class="admin-body"><div class="admin-card"><div class="admin-edit-grid"><div><label>Código</label><input id="apCode" value="${esc(p.code||'')}"></div><div><label>Categoria</label><input id="apCat" value="${esc(p.category||'')}"></div><div class="full"><label>Nome</label><input id="apName" value="${esc(p.name||'')}"></div><div><label>Tamanho</label><input id="apSize" value="${esc(p.size||'')}"></div><div><label>Preço Distribuidor</label><input id="apPrice" type="number" step="0.01" min="0" value="${p.price??0}"></div><div><label>Preço Salão Bahia</label><input id="apSalon" type="number" step="0.01" min="0" value="${p.salonPrice??''}"></div><div><label>Status</label><select id="apActive"><option value="true">Ativo</option><option value="false">Inativo</option></select></div></div><button class="primary" style="width:100%;margin-top:12px" onclick="salvarProdutoAdmin('${p.id}',${p.isNew?'true':'false'})">Salvar produto</button></div></div></div>`;document.body.appendChild(m);document.getElementById('apActive').value=p.active===false?'false':'true';}
 function salvarProdutoAdmin(id,isNew){if(!ehAdmin())return;const list=getAdminProducts();const obj={id:isNew?'prod-'+Date.now():id,code:document.getElementById('apCode').value.trim(),name:document.getElementById('apName').value.trim(),size:document.getElementById('apSize').value.trim(),category:document.getElementById('apCat').value.trim()||'Sem categoria',price:Number(document.getElementById('apPrice').value)||0,salonPrice:document.getElementById('apSalon').value===''?null:Number(document.getElementById('apSalon').value),active:document.getElementById('apActive').value==='true'};if(!obj.code||!obj.name){alert('Informe código e nome.');return}const i=list.findIndex(x=>x.id===id);if(isNew||i<0)list.push(obj);else list[i]=obj;saveAdminProducts(list);document.getElementById('adminEditProduto')?.remove();carregarProdutosAdmin();alert('Produto salvo neste navegador.');}
