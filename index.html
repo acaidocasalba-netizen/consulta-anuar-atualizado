@@ -718,6 +718,141 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
   }
 
 }
+  /* ==================================================
+   NOVO VISUAL — CARDS DE USUÁRIOS — OPÇÃO 2
+================================================== */
+
+.admin-user-card{
+  background:linear-gradient(
+    135deg,
+    #f8fbff 0%,
+    #eef5ff 100%
+  ) !important;
+
+  border:1px solid #e0e7f0 !important;
+  border-radius:16px !important;
+  padding:22px !important;
+  box-shadow:0 4px 14px rgba(15,23,42,.06) !important;
+  transition:.2s ease;
+}
+
+.admin-user-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(15,23,42,.10) !important;
+}
+
+.admin-user-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.admin-user-name{
+  font-size:20px !important;
+  font-weight:800 !important;
+  color:#111827 !important;
+  margin:0 0 5px !important;
+}
+
+.admin-user-email{
+  font-size:14px !important;
+  color:#64748b !important;
+}
+
+.admin-user-status{
+  padding:7px 12px !important;
+  border-radius:999px !important;
+  font-size:13px !important;
+  font-weight:700 !important;
+}
+
+.admin-user-info{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:12px !important;
+  margin-top:20px !important;
+}
+
+.admin-user-info-item{
+  background:#f8fafc !important;
+  border:1px solid #e2e8f0;
+  border-radius:12px !important;
+  padding:13px !important;
+}
+
+.admin-user-info-item small{
+  color:#64748b !important;
+  font-size:12px !important;
+  margin-bottom:5px !important;
+}
+
+.admin-user-info-item strong{
+  color:#111827 !important;
+  font-size:14px !important;
+}
+
+.admin-user-footer{
+  margin-top:18px !important;
+  padding-top:16px !important;
+  border-top:1px solid #dce5ef !important;
+}
+
+.admin-user-actions-wrap{
+  width:100%;
+}
+
+.admin-product-menu-button{
+  width:100% !important;
+  background:#1769e0 !important;
+  color:#fff !important;
+  border:0 !important;
+  border-radius:10px !important;
+  padding:13px 18px !important;
+  font-size:15px !important;
+  font-weight:700 !important;
+}
+
+.admin-product-menu-button:hover{
+  background:#1257bd !important;
+}
+
+.admin-user-actions-menu{
+  width:100%;
+  min-width:100%;
+}
+
+/* RESPONSIVO */
+
+@media(max-width:600px){
+
+  .admin-user-card{
+    padding:18px !important;
+  }
+
+  .admin-user-head{
+    gap:10px;
+  }
+
+  .admin-user-name{
+    font-size:18px !important;
+  }
+
+  .admin-user-email{
+    font-size:13px !important;
+  }
+
+  .admin-user-status{
+    padding:6px 9px !important;
+    font-size:12px !important;
+  }
+
+  .admin-user-info{
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+  }
+
+}
 </style>
 </head>
 <body>
