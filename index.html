@@ -2274,7 +2274,35 @@ const found=getAdminProducts().filter(p=>p.active!==false).filter(p=>{const hay=
  if(!found.length){box.innerHTML='<div class="empty">Nenhum produto encontrado.</div>';return}
  box.innerHTML=found.map(p=>`<div class="product product-result">${imagemProdutoHtml(p.code)}<div><h3>${esc(p.name)}</h3><div class="meta">Código ${p.code}${p.size?' • '+esc(p.size):''}</div><div class="prices">Preço: <span class="price">${brl(priceOf(p))}</span>${table==='dist'&&p.salonPrice!==null?` <span class="badge">Salão Bahia: ${brl(p.salonPrice)}</span>`:''}</div></div><button class="primary" onclick="addProduct('${p.id}')">Adicionar</button></div>`).join('')
 }
-function addProduct(id){const p=products.find(x=>x.id===id);if(!p)return;const existing=order.find(x=>x.id===id&&x.table===table);if(existing)existing.qty++;else order.push({id:p.id,code:p.code,name:p.name,size:p.size,qty:1,unit:priceOf(p),table});renderOrder()}
+function addProduct(id){
+  const p=products.find(x=>x.id===id);
+  if(!p)return;
+
+  const existing=order.find(x=>x.id===id&&x.table===table);
+
+  if(existing){
+    existing.qty++;
+  }else{
+    order.push({
+      id:p.id,
+      code:p.code,
+      name:p.name,
+      size:p.size,
+      qty:1,
+      unit:priceOf(p),
+      table
+    });
+  }
+
+  renderOrder();
+
+  const aviso=document.createElement("div");
+  aviso.textContent="✅ Produto adicionado com sucesso!";
+  aviso.style.cssText="position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:10px;font-weight:700;z-index:99999;box-shadow:0 4px 15px rgba(0,0,0,.25)";
+  document.body.appendChild(aviso);
+
+  setTimeout(()=>aviso.remove(),1800);
+}
   function getDiscount(){
  const subtotal=order.reduce((sum,item)=>sum+(Number(item.unit)||0)*(Math.max(1,Number(item.qty)||1)),0);
  const type=document.getElementById('discountType')?.value||'percent';
@@ -2295,7 +2323,26 @@ function renderOrder(){
 }
 function changeQty(i,v){order[i].qty=Math.max(1,parseInt(v)||1);renderOrder()}
 function removeItem(i){order.splice(i,1);renderOrder()}
-function clearOrder(){order=[];document.getElementById('discountValue').value=0;renderOrder();document.getElementById('invoiceCard').classList.add('hidden')}
+function clearOrder(){
+  order=[];
+  pedidoEmEdicaoId=null;
+
+  document.getElementById('client').value='';
+  document.getElementById('date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('discountType').value='percent';
+  document.getElementById('discountValue').value=0;
+  document.getElementById('search').value='';
+
+  table='dist';
+  document.getElementById('tabDist').classList.add('active');
+  document.getElementById('tabSalon').classList.remove('active');
+
+  renderOrder();
+
+  document.getElementById('invoiceCard').classList.add('hidden');
+
+  searchProducts();
+}
 function invoiceMessage(){const client=document.getElementById('client').value.trim()||'Cliente',date=document.getElementById('date').value,dateBr=formatarDataVisual(date),d=getDiscount();let text=`ANUAR COSMÉTICOS\nFATURAMENTO / PEDIDO\n\nCliente: ${client}\nData: ${dateBr}\nTabela: ${table==='salon'?'Salão Bahia':'Distribuidor'}\n\n`;order.forEach(x=>text+=`${x.qty}x ${x.name} - ${brl(x.unit)} = ${brl(x.unit*x.qty)}\nCódigo: ${x.code}\n`);text+=`\nSUBTOTAL: ${brl(d.subtotal)}\nDESCONTO: -${brl(d.discount)}\nTOTAL: ${brl(d.total)}\n\nObrigado pela preferência!`;return text}
 function generateInvoice(){if(!order.length){alert('Adicione pelo menos um produto.');return}try{registrarPedidoAdmin()}catch(e){console.error(e)}document.getElementById('invoiceText').value=invoiceMessage();document.getElementById('invoiceCard').classList.remove('hidden');document.getElementById('invoiceCard').scrollIntoView({behavior:'smooth'})}
 async function copyInvoice(){const text=document.getElementById('invoiceText').value;try{await navigator.clipboard.writeText(text);alert('Faturamento copiado!')}catch(e){document.getElementById('invoiceText').select();document.execCommand('copy');alert('Faturamento copiado!')}}
@@ -3231,6 +3278,7 @@ if(!pedidoSalvo){
     y+=5;doc.line(120,y,190,y);y+=8;doc.text("Subtotal: "+brlPdf(d.subtotal),125,y);y+=7;doc.text("Desconto: -"+brlPdf(d.discount),125,y);y+=9;
     doc.setFont("helvetica","bold");doc.setFontSize(13);doc.text("TOTAL: "+brlPdf(d.total),125,y);y+=15;doc.setFont("helvetica","normal");doc.setFontSize(9);doc.text("Obrigado pela preferência!",20,y);
     doc.save(`Faturamento_Anuar_${dataBr.replaceAll("/","-")}.pdf`);
+    clearOrder();
   }catch(e){console.error("PDF:",e);alert("Não foi possível gerar o PDF: "+(e?.message||e));}
 }
 </script>
