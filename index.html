@@ -4207,7 +4207,6 @@ async function editarPerfilAdminPorId(id){
 
 }
 
-
 function editarPerfilAdmin(usuario){
 
   if(!ehAdmin()) return;
@@ -4216,13 +4215,10 @@ function editarPerfilAdmin(usuario){
     .getElementById('adminEditModal')
     ?.remove();
 
-  const modal =
-    document.createElement('div');
+  const modal = document.createElement('div');
 
   modal.id = 'adminEditModal';
-
-  modal.className =
-    'admin-overlay';
+  modal.className = 'admin-overlay';
 
   modal.innerHTML = `
 
@@ -4231,15 +4227,16 @@ function editarPerfilAdmin(usuario){
       style="
         max-width:700px;
         min-height:auto;
-        margin-top:25px
-      ">
+        margin-top:25px;
+      "
+    >
 
       <div class="admin-top">
 
         <div>
 
           <h2>
-            👤 Editar usuário
+            ✏️ Editar usuário
           </h2>
 
           <p>
@@ -4253,52 +4250,97 @@ function editarPerfilAdmin(usuario){
           onclick="
             document
               .getElementById('adminEditModal')
-              .remove()
-          ">
-
+              ?.remove()
+          "
+        >
           Fechar
-
         </button>
 
       </div>
 
-
       <div class="admin-body">
 
-        <div class="admin-card">
+        <!-- DADOS DO USUÁRIO -->
+
+        <div class="admin-edit-section">
+
+          <div class="admin-edit-section-title">
+            👤 DADOS DO USUÁRIO
+          </div>
 
           <div class="admin-edit-grid">
 
-            <div>
+            <div class="full">
 
               <label>
-                Nome
+                Nome completo
               </label>
 
               <input
                 id="admNome"
-                value="${esc(usuario.nome || '')}">
+                type="text"
+                value="${esc(usuario.nome || '')}"
+                placeholder="Nome completo"
+              >
 
             </div>
 
-
-            <div>
+            <div class="full">
 
               <label>
                 E-mail
               </label>
 
               <input
+                type="email"
                 value="${esc(usuario.email || '')}"
-                disabled>
+                disabled
+              >
 
             </div>
 
+          </div>
+
+        </div>
+
+
+        <!-- VÍNCULO -->
+
+        <div class="admin-edit-section">
+
+          <div class="admin-edit-section-title">
+            🏢 VÍNCULO
+          </div>
+
+          <label>
+            CD atual
+          </label>
+
+          <select id="admCD">
+
+            <option value="">
+              Sem CD
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- ACESSO -->
+
+        <div class="admin-edit-section">
+
+          <div class="admin-edit-section-title">
+            🔐 ACESSO
+          </div>
+
+          <div class="admin-edit-grid">
 
             <div>
 
               <label>
-                Tipo
+                Tipo de usuário
               </label>
 
               <select id="admTipo">
@@ -4315,60 +4357,43 @@ function editarPerfilAdmin(usuario){
 
             </div>
 
-
             <div>
 
               <label>
-                Acesso
+                Status do acesso
               </label>
 
               <select id="admAcesso">
 
                 <option value="true">
-                  Ativo
+                  🟢 Ativo
                 </option>
 
                 <option value="false">
-                  Bloqueado
+                  🔴 Bloqueado
                 </option>
 
-              </select>
-
-            </div>
-
-
-            <div class="full">
-
-              <label>
-                CD
-              </label>
-
-              <select id="admCD">
-                <option value="">
-                  Sem CD
-                </option>
               </select>
 
             </div>
 
           </div>
 
-
-          <button
-            class="primary"
-            style="
-              width:100%;
-              margin-top:12px
-            "
-            onclick="
-              salvarPerfilAdmin('${usuario.id}')
-            ">
-
-            Salvar alterações
-
-          </button>
-
         </div>
+
+
+        <button
+          class="primary"
+          style="
+            width:100%;
+            margin-top:4px;
+          "
+          onclick="
+            salvarPerfilAdmin('${usuario.id}')
+          "
+        >
+          💾 Salvar alterações
+        </button>
 
       </div>
 
@@ -4378,10 +4403,14 @@ function editarPerfilAdmin(usuario){
 
   document.body.appendChild(modal);
 
-  document.getElementById('admTipo').value =
+  document.getElementById(
+    'admTipo'
+  ).value =
     usuario.tipo || 'funcionario';
 
-  document.getElementById('admAcesso').value =
+  document.getElementById(
+    'admAcesso'
+  ).value =
     usuario.acesso_ativo
       ? 'true'
       : 'false';
@@ -4391,6 +4420,7 @@ function editarPerfilAdmin(usuario){
   );
 
 }
+
 
 
 /* ---------- CDs NO EDITAR ---------- */
