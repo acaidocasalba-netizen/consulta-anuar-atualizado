@@ -5369,37 +5369,38 @@ function iniciarNovoGerenciamentoUsuarios(){
   if(!secao) return;
 
   secao.innerHTML = `
-    <div id="adminUsuariosCDHome" class="admin-card">
+   <div id="adminUsuariosCDHome" class="admin-cd-home">
 
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        gap:10px;
-        align-items:center;
-        flex-wrap:wrap;
-      ">
-        <div>
-          <h3 style="margin:0">👥 Usuários</h3>
-          <p class="admin-muted">
-            Selecione um CD para visualizar e administrar os usuários.
-          </p>
-        </div>
+  <div class="admin-cd-header">
 
-        <button
-          class="primary"
-          onclick="abrirCadastroCDAdmin()">
-          ➕ Cadastrar CD
-        </button>
-      </div>
+    <div class="admin-cd-header-info">
 
-      <div
-        id="adminCDLista"
-        class="admin-cd-grid">
-      </div>
+      <h3>👥 Usuários</h3>
+
+      <p>
+        Selecione um CD para visualizar e administrar os usuários.
+      </p>
 
     </div>
 
+    <button
+      type="button"
+      class="admin-cd-new-button"
+      onclick="abrirCadastroCDAdmin()">
 
+      ＋ Cadastrar novo CD
+
+    </button>
+
+  </div>
+
+
+  <div
+    id="adminCDLista"
+    class="admin-cd-grid-new">
+  </div>
+
+</div>
     <div
       id="adminUsuariosCDView"
       style="display:none"
