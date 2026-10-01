@@ -4165,6 +4165,16 @@ async function carregarUsuariosAdmin(){
                 }
 
               </button>
+                            <button
+                type="button"
+                class="danger"
+                onclick="
+                  fecharAcoesUsuario(this);
+                  excluirUsuarioAdmin('${usuario.id}');
+                "
+              >
+                🗑️ Excluir usuário
+              </button>
 
             </div>
 
