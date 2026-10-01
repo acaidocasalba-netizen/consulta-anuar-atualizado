@@ -853,6 +853,198 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
   }
 
 }
+  /* ==================================================
+   NOVA ENTRADA — ANUAR PEDIDOS
+================================================== */
+
+.anuar-pedidos-home{
+  width:100%;
+}
+
+.anuar-pedidos-header{
+  background:#111;
+  color:#fff;
+  border-radius:0 0 18px 18px;
+  padding:18px 20px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  margin-bottom:14px;
+}
+
+.anuar-pedidos-brand{
+  text-align:center;
+  flex:1;
+}
+
+.anuar-pedidos-brand strong{
+  display:block;
+  font-size:28px;
+  font-weight:400;
+  letter-spacing:4px;
+}
+
+.anuar-pedidos-brand small{
+  display:block;
+  margin-top:2px;
+  font-size:8px;
+  letter-spacing:2px;
+  color:#ddd;
+}
+
+.anuar-pedidos-menu,
+.anuar-pedidos-cart{
+  width:42px;
+  height:42px;
+  border:0;
+  background:transparent;
+  color:#fff;
+  font-size:27px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  flex-shrink:0;
+}
+
+.anuar-pedidos-cart{
+  position:relative;
+}
+
+.anuar-cart-badge{
+  position:absolute;
+  top:0;
+  right:0;
+  min-width:18px;
+  height:18px;
+  padding:0 5px;
+  border-radius:999px;
+  background:#fff;
+  color:#111;
+  font-size:11px;
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.anuar-pedidos-banner{
+  position:relative;
+  overflow:hidden;
+  border-radius:18px;
+  margin:0 0 14px;
+  background:#111;
+}
+
+.anuar-pedidos-banner img{
+  display:block;
+  width:100%;
+  height:240px;
+  object-fit:cover;
+}
+
+.anuar-pedidos-banner-overlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:flex-end;
+  padding:24px;
+  background:linear-gradient(
+    to top,
+    rgba(0,0,0,.72),
+    rgba(0,0,0,0)
+  );
+}
+
+.anuar-pedidos-banner-title{
+  color:#fff;
+  font-size:27px;
+  line-height:1.05;
+  font-weight:800;
+  max-width:260px;
+}
+
+.anuar-pedidos-search{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:16px;
+  padding:6px 8px 6px 15px;
+  box-shadow:0 4px 15px rgba(0,0,0,.06);
+  margin-bottom:14px;
+}
+
+.anuar-pedidos-search-icon{
+  font-size:22px;
+  color:#111;
+}
+
+.anuar-pedidos-search input{
+  flex:1;
+  min-width:0;
+  border:0 !important;
+  outline:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  margin:0 !important;
+  padding:10px 4px !important;
+  font-size:15px;
+}
+
+.anuar-pedidos-search button{
+  width:42px;
+  height:42px;
+  border:0;
+  border-radius:12px;
+  background:#111;
+  color:#fff;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.anuar-pedidos-section-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:18px 0 10px;
+}
+
+.anuar-pedidos-section-title h2{
+  margin:0;
+  font-size:20px;
+  color:#111;
+}
+
+.anuar-pedidos-section-title span{
+  font-size:13px;
+  color:#666;
+}
+
+@media(max-width:700px){
+
+  .anuar-pedidos-header{
+    margin-left:-10px;
+    margin-right:-10px;
+    border-radius:0 0 18px 18px;
+  }
+
+  .anuar-pedidos-brand strong{
+    font-size:25px;
+  }
+
+  .anuar-pedidos-banner img{
+    height:210px;
+  }
+
+  .anuar-pedidos-banner-title{
+    font-size:24px;
+  }
+
+}
 </style>
 </head>
 <body>
