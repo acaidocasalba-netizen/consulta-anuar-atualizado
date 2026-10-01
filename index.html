@@ -3089,9 +3089,13 @@ document.addEventListener("keydown", function(e){
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-function gerarPDFFaturamento(){
+async function gerarPDFFaturamento(){
   if(!Array.isArray(order)||!order.length){alert("Adicione pelo menos um produto antes de gerar o PDF.");return;}
-  try{registrarPedidoAdmin()}catch(e){console.error("PEDIDO:",e)}
+  const pedidoSalvo=await salvarPedidoNoSupabase();
+
+if(!pedidoSalvo){
+  return;
+}
   if(!window.jspdf||!window.jspdf.jsPDF){alert("O gerador de PDF ainda está carregando. Tente novamente.");return;}
   try{
     const {jsPDF}=window.jspdf, doc=new jsPDF({unit:"mm",format:"a4"});
