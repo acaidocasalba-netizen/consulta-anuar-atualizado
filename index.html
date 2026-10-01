@@ -4532,14 +4532,14 @@ async function carregarUsuariosAdmin(){
 
     return `
 
-      <div class="admin-user-card">
+           <div class="admin-user-card">
 
         <div class="admin-user-head">
 
           <div class="admin-user-main">
 
             <div class="admin-user-name">
-              ${esc(usuario.nome || 'Sem nome')}
+              👤 ${esc(usuario.nome || 'Sem nome')}
             </div>
 
             <div class="admin-user-email">
@@ -4559,6 +4559,7 @@ async function carregarUsuariosAdmin(){
 
         </div>
 
+
         <div class="admin-user-info">
 
           <div class="admin-user-info-item">
@@ -4571,6 +4572,7 @@ async function carregarUsuariosAdmin(){
 
           </div>
 
+
           <div class="admin-user-info-item">
 
             <small>🏢 Vínculo</small>
@@ -4582,6 +4584,7 @@ async function carregarUsuariosAdmin(){
           </div>
 
         </div>
+
 
         <div class="admin-user-footer">
 
@@ -4596,6 +4599,7 @@ async function carregarUsuariosAdmin(){
 
             </button>
 
+
             <div class="admin-user-actions-menu">
 
               <button
@@ -4608,6 +4612,7 @@ async function carregarUsuariosAdmin(){
                 ✏️ Editar
 
               </button>
+
 
               <button
                 type="button"
@@ -4631,15 +4636,18 @@ async function carregarUsuariosAdmin(){
                 }
 
               </button>
-                            <button
+
+
+              <button
                 type="button"
                 class="danger"
                 onclick="
                   fecharAcoesUsuario(this);
                   excluirUsuarioAdmin('${usuario.id}');
-                "
-              >
+                ">
+
                 🗑️ Excluir usuário
+
               </button>
 
             </div>
@@ -4651,8 +4659,7 @@ async function carregarUsuariosAdmin(){
       </div>
 
     `;
-
-  }).join('');
+    }).join('');
 
 }
 
