@@ -4642,6 +4642,155 @@ async function cadastrarNovoUsuario(){
 /* ---------- INICIALIZAÇÃO ---------- */
 
 function iniciarNovoGerenciamentoUsuarios(){
+  if(!ehAdmin()) return;
+
+  const secao = document.querySelector(
+    '.admin-section[data-section="usuarios"]'
+  );
+
+  if(!secao) return;
+
+  secao.innerHTML = `
+    <div id="adminUsuariosCDHome" class="admin-card">
+
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        gap:10px;
+        align-items:center;
+        flex-wrap:wrap;
+      ">
+        <div>
+          <h3 style="margin:0">👥 Usuários</h3>
+          <p class="admin-muted">
+            Selecione um CD para visualizar e administrar os usuários.
+          </p>
+        </div>
+
+        <button
+          class="primary"
+          onclick="abrirCadastroCDAdmin()">
+          ➕ Cadastrar CD
+        </button>
+      </div>
+
+      <div
+        id="adminCDLista"
+        class="admin-cd-grid">
+      </div>
+
+    </div>
+
+
+    <div
+      id="adminUsuariosCDView"
+      style="display:none"
+    >
+
+      <div
+        class="admin-card"
+        style="margin-top:12px"
+      >
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          gap:10px;
+          align-items:center;
+          flex-wrap:wrap;
+        ">
+
+          <div>
+
+            <button
+              class="secondary"
+              onclick="voltarListaCDsAdmin()">
+              ← Voltar aos CDs
+            </button>
+
+            <h3
+              id="adminUsuariosCDTitulo"
+              style="margin:12px 0 4px">
+              📍 CD
+            </h3>
+
+            <p
+              id="adminUsuariosCDResumo"
+              class="admin-muted">
+            </p>
+
+          </div>
+
+          <button
+            class="primary"
+            onclick="abrirCadastroUsuarioAdmin()">
+            ➕ Cadastrar usuário
+          </button>
+
+        </div>
+
+
+        <div
+          class="admin-filter"
+          style="margin-top:12px">
+
+          <input
+            id="adminUsuarioBusca"
+            placeholder="Pesquisar por nome ou e-mail"
+            oninput="carregarUsuariosAdmin()">
+
+          <select
+            id="adminUsuarioFiltro"
+            onchange="carregarUsuariosAdmin()">
+
+            <option value="todos">
+              Todos
+            </option>
+
+            <option value="ativos">
+              Ativos
+            </option>
+
+            <option value="bloqueados">
+              Bloqueados
+            </option>
+
+            <option value="admin">
+              Administradores
+            </option>
+
+            <option value="funcionario">
+              Funcionários
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="admin-card"
+        style="margin-top:12px">
+
+        <div
+          id="adminUsuariosBody"
+          class="admin-users-list">
+
+          <div class="admin-empty">
+            Selecione um CD.
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  `;
+
+  carregarCDsAdmin();
+}
 
   if(!ehAdmin()) return;
 
