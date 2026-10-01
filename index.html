@@ -1045,6 +1045,154 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
   }
 
 }
+/* ==================================================
+   CARDS DE PRODUTOS — ANUAR
+================================================== */
+
+#results .anuar-product-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  width:100%;
+}
+
+#results .anuar-product-card{
+  background:#fff;
+  border:1px solid #dedede;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 4px 14px rgba(0,0,0,.06);
+  min-width:0;
+}
+
+#results .anuar-product-photo{
+  width:100%;
+  height:180px;
+  background:#f4f4f4;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+#results .anuar-product-image{
+  width:100% !important;
+  height:100% !important;
+  max-width:100% !important;
+  max-height:100% !important;
+  object-fit:contain !important;
+  display:block;
+  border:0 !important;
+  border-radius:0 !important;
+  background:#fff;
+}
+
+#results .anuar-product-image-placeholder{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#888;
+  font-size:11px;
+}
+
+#results .anuar-product-content{
+  padding:12px;
+}
+
+#results .anuar-product-code{
+  font-size:10px;
+  font-weight:700;
+  color:#777;
+  letter-spacing:.8px;
+  margin-bottom:5px;
+}
+
+#results .anuar-product-name{
+  margin:0;
+  font-size:14px;
+  line-height:1.25;
+  color:#111;
+}
+
+#results .anuar-product-size{
+  margin-top:5px;
+  font-size:11px;
+  color:#777;
+}
+
+#results .anuar-product-bottom{
+  margin-top:12px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:8px;
+}
+
+#results .anuar-product-bottom small{
+  display:block;
+  font-size:10px;
+  color:#777;
+  margin-bottom:2px;
+}
+
+#results .anuar-product-bottom strong{
+  display:block;
+  font-size:15px;
+  color:#111;
+}
+
+#results .anuar-product-secondary{
+  margin-top:4px;
+  font-size:10px;
+  color:#777;
+}
+
+#results .anuar-product-add{
+  width:38px;
+  height:38px;
+  flex-shrink:0;
+  border:0;
+  border-radius:11px;
+  background:#111;
+  color:#fff;
+  font-size:23px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+@media(max-width:700px){
+
+  #results .anuar-product-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+
+  #results .anuar-product-photo{
+    height:150px;
+  }
+
+  #results .anuar-product-content{
+    padding:10px;
+  }
+
+  #results .anuar-product-name{
+    font-size:12px;
+  }
+
+  #results .anuar-product-bottom strong{
+    font-size:14px;
+  }
+
+  #results .anuar-product-add{
+    width:34px;
+    height:34px;
+    font-size:21px;
+  }
+}
   
   </style>
 </head>
