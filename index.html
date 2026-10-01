@@ -4056,23 +4056,109 @@ async function carregarCDsAdmin(){
   });
 
   const cards = adminCDsCache.map(cd => `
+  <article class="admin-cd-card-new">
 
-    <div
-      class="admin-cd-card"
-      onclick="abrirCDUsuariosAdmin('${cd.id}')">
+    <div class="admin-cd-card-top">
 
-      <div class="admin-cd-icon">📍</div>
+      <div class="admin-cd-main">
 
-      <h4>${esc(cd.nome)}</h4>
+        <div class="admin-cd-location-icon">
+          📍
+        </div>
 
-      <p>
-        ${contagem[cd.id] || 0} usuário(s)
-      </p>
+        <div>
+          <h4 class="admin-cd-name">
+            ${esc(cd.nome)}
+          </h4>
+
+          <p class="admin-cd-location">
+            Centro de distribuição
+          </p>
+        </div>
+
+      </div>
+
+      <span class="admin-cd-status">
+        <span class="admin-cd-status-dot"></span>
+        Ativo
+      </span>
 
     </div>
 
-  `).join('');
 
+    <div class="admin-cd-info">
+
+      <div class="admin-cd-info-item">
+
+        <span class="admin-cd-info-icon">
+          👥
+        </span>
+
+        <div>
+          <span class="admin-cd-info-label">
+            Usuários
+          </span>
+
+          <span class="admin-cd-info-value">
+            ${contagem[cd.id] || 0}
+          </span>
+        </div>
+
+      </div>
+
+
+      <div class="admin-cd-info-item">
+
+        <span class="admin-cd-info-icon">
+          📍
+        </span>
+
+        <div>
+          <span class="admin-cd-info-label">
+            Localização
+          </span>
+
+          <span class="admin-cd-info-value">
+            CD cadastrado
+          </span>
+        </div>
+
+      </div>
+
+
+      <div class="admin-cd-info-item">
+
+        <span class="admin-cd-info-icon">
+          ✓
+        </span>
+
+        <div>
+          <span class="admin-cd-info-label">
+            Status
+          </span>
+
+          <span class="admin-cd-info-value">
+            Ativo
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <button
+      type="button"
+      class="admin-cd-manage"
+      onclick="abrirCDUsuariosAdmin('${cd.id}')">
+
+      Gerenciar usuários
+      <span>→</span>
+
+    </button>
+
+  </article>
+`).join('');
   lista.innerHTML = cards;
   
 }
