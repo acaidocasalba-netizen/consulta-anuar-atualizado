@@ -3493,6 +3493,1658 @@ if(!pedidoSalvo){
     clearOrder();
   }catch(e){console.error("PDF:",e);alert("Não foi possível gerar o PDF: "+(e?.message||e));}
 }
+  /* =========================================================
+   NOVO GERENCIAMENTO DE USUÁRIOS POR CD
+   ========================================================= */
+
+let adminUsuariosCDSelecionado = null;
+let adminCDsCache = [];
+
+/* ---------- ABRIR / FECHAR AÇÕES ---------- */
+
+function abrirAcoesUsuario(botao){
+  const menu = botao.parentElement.querySelector('.admin-user-actions-menu');
+
+  document.querySelectorAll('.admin-user-actions-menu.open').forEach(m=>{
+    if(m !== menu) m.classList.remove('open');
+  });
+
+  menu?.classList.toggle('open');
+}
+
+function fecharAcoesUsuario(botao){
+  botao.closest('.admin-user-actions-menu')?.classList.remove('open');
+}
+
+
+/* ---------- TELA PRINCIPAL DOS CDs ---------- */
+
+async function carregarCDsAdmin(){
+
+  if(!ehAdmin()) return;
+
+  const lista = document.getElementById('adminCDLista');
+
+  if(!lista) return;
+
+  lista.innerHTML =
+    '<div class="admin-empty">Carregando CDs...</div>';
+
+  const {data,error} =
+    await supabaseClient
+      .from('cds')
+      .select('id,nome,ativo')
+      .eq('ativo',true)
+      .order('nome',{ascending:true});
+
+  if(error){
+
+    lista.innerHTML =
+      '<div class="admin-empty">Erro ao carregar CDs: ' +
+      esc(error.message || '') +
+      '</div>';
+
+    return;
+  }
+
+  adminCDsCache = data || [];
+
+  const {data:perfis,error:erroPerfis} =
+    await supabaseClient
+      .from('perfis')
+      .select('id,cd_id');
+
+  if(erroPerfis){
+
+    lista.innerHTML =
+      '<div class="admin-empty">Erro ao contar usuários: ' +
+      esc(erroPerfis.message || '') +
+      '</div>';
+
+    return;
+  }
+
+  const contagem = {};
+
+  (perfis || []).forEach(usuario => {
+
+    const chave = usuario.cd_id || 'sem-cd';
+
+    contagem[chave] =
+      (contagem[chave] || 0) + 1;
+
+  });
+
+  const cards = adminCDsCache.map(cd => `
+
+    <div
+      class="admin-cd-card"
+      onclick="abrirCDUsuariosAdmin('${cd.id}')">
+
+      <div class="admin-cd-icon">📍</div>
+
+      <h4>${esc(cd.nome)}</h4>
+
+      <p>
+        ${contagem[cd.id] || 0} usuário(s)
+      </p>
+
+    </div>
+
+  `).join('');
+
+  lista.innerHTML =
+    cards +
+
+    `
+
+      <div
+        class="admin-cd-card"
+        onclick="abrirCDUsuariosAdmin(null)">
+
+        <div class="admin-cd-icon">📂</div>
+
+        <h4>Sem CD</h4>
+
+        <p>
+          ${contagem['sem-cd'] || 0} usuário(s)
+        </p>
+
+      </div>
+
+    `;
+}
+
+
+/* ---------- ENTRAR NO CD ---------- */
+
+function abrirCDUsuariosAdmin(cdId){
+
+  if(!ehAdmin()) return;
+
+  adminUsuariosCDSelecionado = cdId || null;
+
+  const cd =
+    adminCDsCache.find(
+      x => String(x.id) === String(cdId)
+    );
+
+  const home =
+    document.getElementById('adminUsuariosCDHome');
+
+  const view =
+    document.getElementById('adminUsuariosCDView');
+
+  if(home) home.style.display = 'none';
+
+  if(!view) return;
+
+  view.style.display = 'block';
+
+  const titulo =
+    document.getElementById('adminUsuariosCDTitulo');
+
+  if(titulo){
+
+    titulo.textContent =
+      '📍 ' + (cd?.nome || 'Sem CD');
+
+  }
+
+  const resumo =
+    document.getElementById('adminUsuariosCDResumo');
+
+  if(resumo){
+
+    resumo.textContent =
+      'Usuários deste grupo';
+
+  }
+
+  const busca =
+    document.getElementById('adminUsuarioBusca');
+
+  if(busca) busca.value = '';
+
+  const filtro =
+    document.getElementById('adminUsuarioFiltro');
+
+  if(filtro) filtro.value = 'todos';
+
+  carregarUsuariosAdmin();
+
+}
+
+
+/* ---------- VOLTAR PARA CDs ---------- */
+
+function voltarListaCDsAdmin(){
+
+  adminUsuariosCDSelecionado = null;
+
+  const view =
+    document.getElementById('adminUsuariosCDView');
+
+  const home =
+    document.getElementById('adminUsuariosCDHome');
+
+  if(view) view.style.display = 'none';
+
+  if(home) home.style.display = '';
+
+  carregarCDsAdmin();
+
+}
+
+
+/* ---------- LISTA DE USUÁRIOS ---------- */
+
+async function carregarUsuariosAdmin(){
+
+  if(!ehAdmin()) return;
+
+  const body =
+    document.getElementById('adminUsuariosBody');
+
+  if(!body) return;
+
+  body.innerHTML =
+    '<tr><td colspan="5" class="admin-empty">Carregando...</td></tr>';
+
+  let query =
+    supabaseClient
+      .from('perfis')
+      .select(
+        'id,nome,email,tipo,acesso_ativo,criado_em,cd_id'
+      )
+      .order('criado_em',{ascending:false});
+
+  if(adminUsuariosCDSelecionado){
+
+    query =
+      query.eq(
+        'cd_id',
+        adminUsuariosCDSelecionado
+      );
+
+  }else{
+
+    query =
+      query.is('cd_id',null);
+
+  }
+
+  const {data,error} = await query;
+
+  if(error){
+
+    body.innerHTML =
+      '<tr><td colspan="5" class="admin-empty">' +
+      esc(error.message || 'Erro ao carregar usuários.') +
+      '</td></tr>';
+
+    return;
+  }
+
+  const busca =
+    (
+      document.getElementById('adminUsuarioBusca')?.value ||
+      ''
+    )
+    .toLowerCase()
+    .trim();
+
+  const filtro =
+    document.getElementById('adminUsuarioFiltro')?.value ||
+    'todos';
+
+  const lista =
+    (data || []).filter(usuario => {
+
+      const texto =
+        `${usuario.nome || ''} ${usuario.email || ''}`
+        .toLowerCase();
+
+      if(
+        busca &&
+        !texto.includes(busca)
+      ){
+        return false;
+      }
+
+      if(
+        filtro === 'ativos' &&
+        !usuario.acesso_ativo
+      ){
+        return false;
+      }
+
+      if(
+        filtro === 'bloqueados' &&
+        usuario.acesso_ativo
+      ){
+        return false;
+      }
+
+      if(
+        filtro === 'admin' &&
+        usuario.tipo !== 'admin'
+      ){
+        return false;
+      }
+
+      if(
+        filtro === 'funcionario' &&
+        usuario.tipo !== 'funcionario'
+      ){
+        return false;
+      }
+
+      return true;
+
+    });
+
+
+  body.innerHTML = lista.length
+
+    ? lista.map(usuario => `
+
+      <tr>
+
+        <td>
+          ${esc(usuario.nome || '—')}
+        </td>
+
+        <td>
+          ${esc(usuario.email || '—')}
+        </td>
+
+        <td>
+          ${
+            usuario.tipo === 'admin'
+              ? 'Administrador'
+              : 'Funcionário'
+          }
+        </td>
+
+        <td>
+
+          <span
+            class="admin-badge ${
+              usuario.acesso_ativo
+                ? 'ok'
+                : 'block'
+            }">
+
+            ${
+              usuario.acesso_ativo
+                ? 'Ativo'
+                : 'Bloqueado'
+            }
+
+          </span>
+
+        </td>
+
+        <td>
+
+          <div class="admin-user-actions-wrap">
+
+            <button
+              type="button"
+              class="admin-product-menu-button"
+              onclick="abrirAcoesUsuario(this)">
+
+              ⋮ Ações
+
+            </button>
+
+            <div class="admin-user-actions-menu">
+
+              <button
+                type="button"
+                onclick="
+                  fecharAcoesUsuario(this);
+                  editarPerfilAdminPorId('${usuario.id}');
+                ">
+
+                ✏️ Editar
+
+              </button>
+
+              <button
+                type="button"
+                class="${
+                  usuario.acesso_ativo
+                    ? 'danger'
+                    : 'success'
+                }"
+                onclick="
+                  fecharAcoesUsuario(this);
+                  alternarAcessoAdmin(
+                    '${usuario.id}',
+                    ${usuario.acesso_ativo ? 'false' : 'true'}
+                  );
+                ">
+
+                ${
+                  usuario.acesso_ativo
+                    ? '🔒 Bloquear'
+                    : '🔓 Desbloquear'
+                }
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </td>
+
+      </tr>
+
+    `).join('')
+
+    :
+
+    `
+      <tr>
+        <td
+          colspan="5"
+          class="admin-empty">
+
+          Nenhum usuário encontrado.
+
+        </td>
+      </tr>
+    `;
+
+}
+
+
+/* ---------- EDITAR USUÁRIO ---------- */
+
+async function editarPerfilAdminPorId(id){
+
+  const {data,error} =
+    await supabaseClient
+      .from('perfis')
+      .select(
+        'id,nome,email,tipo,acesso_ativo,cd_id'
+      )
+      .eq('id',id)
+      .single();
+
+  if(error || !data){
+
+    alert(
+      'Não foi possível carregar o usuário.'
+    );
+
+    return;
+  }
+
+  editarPerfilAdmin(data);
+
+}
+
+
+function editarPerfilAdmin(usuario){
+
+  if(!ehAdmin()) return;
+
+  document
+    .getElementById('adminEditModal')
+    ?.remove();
+
+  const modal =
+    document.createElement('div');
+
+  modal.id = 'adminEditModal';
+
+  modal.className =
+    'admin-overlay';
+
+  modal.innerHTML = `
+
+    <div
+      class="admin-panel"
+      style="
+        max-width:700px;
+        min-height:auto;
+        margin-top:25px
+      ">
+
+      <div class="admin-top">
+
+        <div>
+
+          <h2>
+            👤 Editar usuário
+          </h2>
+
+          <p>
+            ${esc(usuario.email || '')}
+          </p>
+
+        </div>
+
+        <button
+          class="admin-close"
+          onclick="
+            document
+              .getElementById('adminEditModal')
+              .remove()
+          ">
+
+          Fechar
+
+        </button>
+
+      </div>
+
+
+      <div class="admin-body">
+
+        <div class="admin-card">
+
+          <div class="admin-edit-grid">
+
+            <div>
+
+              <label>
+                Nome
+              </label>
+
+              <input
+                id="admNome"
+                value="${esc(usuario.nome || '')}">
+
+            </div>
+
+
+            <div>
+
+              <label>
+                E-mail
+              </label>
+
+              <input
+                value="${esc(usuario.email || '')}"
+                disabled>
+
+            </div>
+
+
+            <div>
+
+              <label>
+                Tipo
+              </label>
+
+              <select id="admTipo">
+
+                <option value="admin">
+                  Administrador
+                </option>
+
+                <option value="funcionario">
+                  Funcionário
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <div>
+
+              <label>
+                Acesso
+              </label>
+
+              <select id="admAcesso">
+
+                <option value="true">
+                  Ativo
+                </option>
+
+                <option value="false">
+                  Bloqueado
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <div class="full">
+
+              <label>
+                CD
+              </label>
+
+              <select id="admCD">
+                <option value="">
+                  Sem CD
+                </option>
+              </select>
+
+            </div>
+
+          </div>
+
+
+          <button
+            class="primary"
+            style="
+              width:100%;
+              margin-top:12px
+            "
+            onclick="
+              salvarPerfilAdmin('${usuario.id}')
+            ">
+
+            Salvar alterações
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+  document.body.appendChild(modal);
+
+  document.getElementById('admTipo').value =
+    usuario.tipo || 'funcionario';
+
+  document.getElementById('admAcesso').value =
+    usuario.acesso_ativo
+      ? 'true'
+      : 'false';
+
+  carregarCDsSelectEdicaoAdmin(
+    usuario.cd_id
+  );
+
+}
+
+
+/* ---------- CDs NO EDITAR ---------- */
+
+async function carregarCDsSelectEdicaoAdmin(cdAtual){
+
+  const select =
+    document.getElementById('admCD');
+
+  if(!select) return;
+
+  const {data,error} =
+    await supabaseClient
+      .from('cds')
+      .select('id,nome')
+      .eq('ativo',true)
+      .order('nome',{ascending:true});
+
+  if(error){
+
+    select.innerHTML =
+      '<option value="">Sem CD</option>';
+
+    return;
+  }
+
+  select.innerHTML =
+    '<option value="">Sem CD</option>' +
+
+    (data || [])
+      .map(cd =>
+        `<option value="${cd.id}">
+          ${esc(cd.nome)}
+        </option>`
+      )
+      .join('');
+
+  select.value =
+    cdAtual || '';
+
+}
+
+
+/* ---------- BLOQUEAR / DESBLOQUEAR ---------- */
+
+async function alternarAcessoAdmin(id,ativo){
+
+  if(!ehAdmin()) return;
+
+  const confirmacao =
+    confirm(
+      ativo
+        ? 'Desbloquear o acesso deste usuário?'
+        : 'Bloquear o acesso deste usuário?'
+    );
+
+  if(!confirmacao) return;
+
+  const {error} =
+    await supabaseClient
+      .from('perfis')
+      .update({
+        acesso_ativo: ativo
+      })
+      .eq('id',id);
+
+  if(error){
+
+    alert(
+      'Erro: ' +
+      error.message
+    );
+
+    return;
+  }
+
+  await carregarUsuariosAdmin();
+
+  await atualizarDashboardAdmin();
+
+}
+
+
+/* ---------- SALVAR EDIÇÃO ---------- */
+
+async function salvarPerfilAdmin(id){
+
+  if(!ehAdmin()) return;
+
+  const payload = {
+
+    nome:
+      document
+        .getElementById('admNome')
+        .value
+        .trim(),
+
+    tipo:
+      document
+        .getElementById('admTipo')
+        .value,
+
+    acesso_ativo:
+      document
+        .getElementById('admAcesso')
+        .value === 'true',
+
+    cd_id:
+      document
+        .getElementById('admCD')
+        .value || null
+
+  };
+
+  const {error} =
+    await supabaseClient
+      .from('perfis')
+      .update(payload)
+      .eq('id',id);
+
+  if(error){
+
+    alert(
+      'Não foi possível salvar: ' +
+      error.message
+    );
+
+    return;
+  }
+
+  document
+    .getElementById('adminEditModal')
+    ?.remove();
+
+  await carregarUsuariosAdmin();
+
+  await carregarCDsAdmin();
+
+  alert(
+    'Usuário atualizado com sucesso.'
+  );
+
+}
+
+
+/* ---------- CADASTRAR CD ---------- */
+
+function abrirCadastroCDAdmin(){
+
+  const modal =
+    document.getElementById(
+      'adminCadastroCDModal'
+    );
+
+  if(modal)
+    modal.style.display = 'flex';
+
+  const input =
+    document.getElementById('novoCDNome');
+
+  if(input)
+    input.value = '';
+
+}
+
+
+function fecharCadastroCDAdmin(){
+
+  const modal =
+    document.getElementById(
+      'adminCadastroCDModal'
+    );
+
+  if(modal)
+    modal.style.display = 'none';
+
+}
+
+
+async function cadastrarCDAdmin(){
+
+  if(!ehAdmin()) return;
+
+  const input =
+    document.getElementById('novoCDNome');
+
+  const nome =
+    input?.value.trim() || '';
+
+  if(!nome){
+
+    alert(
+      'Informe o nome do CD.'
+    );
+
+    return;
+  }
+
+  const {error} =
+    await supabaseClient
+      .from('cds')
+      .insert({
+        nome: nome
+      });
+
+  if(error){
+
+    alert(
+      'Não foi possível cadastrar o CD: ' +
+      error.message
+    );
+
+    return;
+  }
+
+  fecharCadastroCDAdmin();
+
+  carregarCDsAdmin();
+
+}
+
+
+/* ---------- CADASTRAR USUÁRIO ---------- */
+
+function abrirCadastroUsuarioAdmin(){
+
+  const modal =
+    document.getElementById(
+      'adminCadastroUsuarioModal'
+    );
+
+  if(!modal) return;
+
+  modal.style.display = 'flex';
+
+  carregarCDsSelectAdmin();
+
+  setTimeout(()=>{
+
+    const select =
+      document.getElementById(
+        'novoUsuarioCD'
+      );
+
+    if(select){
+
+      select.value =
+        adminUsuariosCDSelecionado || '';
+
+    }
+
+  },100);
+
+}
+
+
+function fecharCadastroUsuarioAdmin(){
+
+  const modal =
+    document.getElementById(
+      'adminCadastroUsuarioModal'
+    );
+
+  if(modal)
+    modal.style.display = 'none';
+
+}
+
+
+async function carregarCDsSelectAdmin(){
+
+  const select =
+    document.getElementById(
+      'novoUsuarioCD'
+    );
+
+  if(!select) return;
+
+  const {data,error} =
+    await supabaseClient
+      .from('cds')
+      .select('id,nome')
+      .eq('ativo',true)
+      .order('nome',{ascending:true});
+
+  if(error){
+
+    select.innerHTML =
+      '<option value="">Sem CD</option>';
+
+    return;
+  }
+
+  select.innerHTML =
+    '<option value="">Sem CD</option>' +
+
+    (data || [])
+      .map(cd =>
+        `<option value="${cd.id}">
+          ${esc(cd.nome)}
+        </option>`
+      )
+      .join('');
+
+}
+
+
+async function cadastrarNovoUsuario(){
+
+  if(!ehAdmin()){
+
+    alert(
+      'Acesso restrito ao administrador.'
+    );
+
+    return;
+  }
+
+  const nome =
+    document
+      .getElementById('novoUsuarioNome')
+      ?.value
+      .trim() || '';
+
+  const email =
+    document
+      .getElementById('novoUsuarioEmail')
+      ?.value
+      .trim()
+      .toLowerCase() || '';
+
+  const senha =
+    document
+      .getElementById('novoUsuarioSenha')
+      ?.value || '';
+
+  const tipo =
+    document
+      .getElementById('novoUsuarioTipo')
+      ?.value || 'funcionario';
+
+  const acesso_ativo =
+    document
+      .getElementById('novoUsuarioAcesso')
+      ?.checked === true;
+
+  const cd_id =
+    document
+      .getElementById('novoUsuarioCD')
+      ?.value || null;
+
+  const msg =
+    document
+      .getElementById('novoUsuarioMensagem');
+
+  if(!msg) return;
+
+  if(!nome || !email || !senha){
+
+    msg.style.color = '#b00020';
+
+    msg.textContent =
+      'Preencha nome, e-mail e senha.';
+
+    return;
+  }
+
+  if(
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ){
+
+    msg.style.color = '#b00020';
+
+    msg.textContent =
+      'Informe um e-mail válido.';
+
+    return;
+  }
+
+  if(senha.length < 6){
+
+    msg.style.color = '#b00020';
+
+    msg.textContent =
+      'A senha precisa ter pelo menos 6 caracteres.';
+
+    return;
+  }
+
+  msg.style.color = '#555';
+
+  msg.textContent =
+    'Cadastrando usuário...';
+
+  try{
+
+    const {data:sessaoData} =
+      await supabaseClient.auth.getSession();
+
+    const accessToken =
+      sessaoData?.session?.access_token;
+
+    if(!accessToken){
+
+      throw new Error(
+        'Sessão administrativa não encontrada.'
+      );
+
+    }
+
+    const {data,error} =
+      await supabaseClient.functions.invoke(
+        'cadastrar-usuario',
+        {
+          headers:{
+            Authorization:
+              `Bearer ${accessToken}`
+          },
+
+          body:{
+            nome,
+            email,
+            senha,
+            tipo,
+            acesso_ativo
+          }
+
+        }
+      );
+
+    if(error){
+
+      throw new Error(
+        error.message ||
+        'Não foi possível cadastrar.'
+      );
+
+    }
+
+    if(data?.error){
+
+      throw new Error(
+        data.error
+      );
+
+    }
+
+    /*
+      O usuário é criado pela Edge Function.
+      Depois vinculamos o perfil ao CD escolhido.
+    */
+
+    const {error:erroPerfil} =
+      await supabaseClient
+        .from('perfis')
+        .update({
+          cd_id: cd_id
+        })
+        .eq('email',email);
+
+    if(erroPerfil){
+
+      throw new Error(
+        'Usuário criado, mas não foi possível vincular o CD: ' +
+        erroPerfil.message
+      );
+
+    }
+
+    msg.style.color =
+      '#176b31';
+
+    msg.textContent =
+      'Usuário cadastrado com sucesso!';
+
+    await carregarCDsAdmin();
+
+    await carregarUsuariosAdmin();
+
+    setTimeout(
+      fecharCadastroUsuarioAdmin,
+      600
+    );
+
+  }catch(e){
+
+    console.error(
+      'CADASTRO USUÁRIO:',
+      e
+    );
+
+    msg.style.color =
+      '#b00020';
+
+    msg.textContent =
+      'Não foi possível cadastrar: ' +
+      String(
+        e?.message ||
+        e ||
+        'Erro'
+      );
+
+  }
+
+}
+
+
+/* ---------- INICIALIZAÇÃO ---------- */
+
+function iniciarNovoGerenciamentoUsuarios(){
+
+  if(!ehAdmin()) return;
+
+  /*
+    Substitui a antiga área de usuários
+    somente quando o painel administrativo
+    estiver aberto.
+  */
+
+  const secao =
+    document.querySelector(
+      '.admin-section[data-section="usuarios"]'
+    );
+
+  if(!secao) return;
+
+  secao.innerHTML = `
+
+    <div
+      id="adminUsuariosCDHome"
+      class="admin-card">
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          gap:10px;
+          align-items:center;
+          flex-wrap:wrap;
+        ">
+
+        <div>
+
+          <h3 style="margin:0">
+            👥 Usuários
+          </h3>
+
+          <p class="admin-muted">
+            Selecione um CD para visualizar
+            e administrar os usuários.
+          </p>
+
+        </div>
+
+        <button
+          class="primary"
+          onclick="abrirCadastroCDAdmin()">
+
+          ➕ Cadastrar CD
+
+        </button>
+
+      </div>
+
+      <div
+        id="adminCDLista"
+        class="admin-cd-grid">
+      </div>
+
+    </div>
+
+
+    <div
+      id="adminUsuariosCDView"
+      style="display:none">
+
+      <div
+        class="admin-card"
+        style="margin-top:12px">
+
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            gap:10px;
+            align-items:center;
+            flex-wrap:wrap;
+          ">
+
+          <div>
+
+            <button
+              class="secondary"
+              onclick="voltarListaCDsAdmin()">
+
+              ← Voltar aos CDs
+
+            </button>
+
+            <h3
+              id="adminUsuariosCDTitulo"
+              style="margin:12px 0 4px">
+
+              📍 CD
+
+            </h3>
+
+            <p
+              id="adminUsuariosCDResumo"
+              class="admin-muted">
+
+            </p>
+
+          </div>
+
+          <button
+            class="primary"
+            onclick="abrirCadastroUsuarioAdmin()">
+
+            ➕ Cadastrar usuário
+
+          </button>
+
+        </div>
+
+
+        <div
+          class="admin-filter"
+          style="margin-top:12px">
+
+          <input
+            id="adminUsuarioBusca"
+            placeholder="Pesquisar por nome ou e-mail"
+            oninput="carregarUsuariosAdmin()">
+
+          <select
+            id="adminUsuarioFiltro"
+            onchange="carregarUsuariosAdmin()">
+
+            <option value="todos">
+              Todos
+            </option>
+
+            <option value="ativos">
+              Ativos
+            </option>
+
+            <option value="bloqueados">
+              Bloqueados
+            </option>
+
+            <option value="admin">
+              Administradores
+            </option>
+
+            <option value="funcionario">
+              Funcionários
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="admin-card"
+        style="margin-top:12px">
+
+        <div class="admin-table-wrap">
+
+          <table class="admin-table">
+
+            <thead>
+
+              <tr>
+
+                <th>
+                  Nome
+                </th>
+
+                <th>
+                  E-mail
+                </th>
+
+                <th>
+                  Tipo
+                </th>
+
+                <th>
+                  Acesso
+                </th>
+
+                <th>
+                  Ações
+                </th>
+
+              </tr>
+
+            </thead>
+
+            <tbody
+              id="adminUsuariosBody">
+
+              <tr>
+
+                <td
+                  colspan="5"
+                  class="admin-empty">
+
+                  Selecione um CD.
+
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="adminCadastroUsuarioModal"
+      class="admin-overlay"
+      style="display:none">
+
+      <div
+        class="admin-panel"
+        style="
+          max-width:700px;
+          min-height:auto;
+          margin-top:25px;
+        ">
+
+        <div class="admin-top">
+
+          <div>
+
+            <h2>
+              👤 Cadastrar usuário
+            </h2>
+
+            <p
+              id="adminCadastroUsuarioCD"
+              class="admin-muted">
+
+            </p>
+
+          </div>
+
+          <button
+            class="admin-close"
+            onclick="fecharCadastroUsuarioAdmin()">
+
+            Fechar
+
+          </button>
+
+        </div>
+
+
+        <div class="admin-body">
+
+          <div class="admin-card">
+
+            <div class="admin-edit-grid">
+
+              <div>
+
+                <label>
+                  Nome
+                </label>
+
+                <input
+                  id="novoUsuarioNome"
+                  type="text"
+                  placeholder="Nome completo">
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  E-mail
+                </label>
+
+                <input
+                  id="novoUsuarioEmail"
+                  type="email"
+                  placeholder="E-mail">
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  Senha inicial
+                </label>
+
+                <input
+                  id="novoUsuarioSenha"
+                  type="password"
+                  minlength="6"
+                  placeholder="Mínimo 6 caracteres">
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  Tipo
+                </label>
+
+                <select id="novoUsuarioTipo">
+
+                  <option value="funcionario">
+                    Funcionário
+                  </option>
+
+                  <option value="admin">
+                    Administrador
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div class="full">
+
+                <label>
+                  CD
+                </label>
+
+                <select
+                  id="novoUsuarioCD">
+                </select>
+
+              </div>
+
+            </div>
+
+
+            <label
+              style="
+                display:flex;
+                gap:8px;
+                align-items:center;
+                margin-top:10px;
+              ">
+
+              <input
+                id="novoUsuarioAcesso"
+                type="checkbox"
+                checked>
+
+              Acesso ativo
+
+            </label>
+
+
+            <button
+              class="primary"
+              style="
+                width:100%;
+                margin-top:12px;
+              "
+              onclick="cadastrarNovoUsuario()">
+
+              Cadastrar usuário
+
+            </button>
+
+
+            <div
+              id="novoUsuarioMensagem"
+              class="admin-muted"
+              style="margin-top:8px">
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="adminCadastroCDModal"
+      class="admin-overlay"
+      style="display:none">
+
+      <div
+        class="admin-panel"
+        style="
+          max-width:600px;
+          min-height:auto;
+          margin-top:25px;
+        ">
+
+        <div class="admin-top">
+
+          <div>
+
+            <h2>
+              🏢 Cadastrar CD
+            </h2>
+
+            <p class="admin-muted">
+              Cadastre um novo centro de distribuição.
+            </p>
+
+          </div>
+
+          <button
+            class="admin-close"
+            onclick="fecharCadastroCDAdmin()">
+
+            Fechar
+
+          </button>
+
+        </div>
+
+
+        <div class="admin-body">
+
+          <div class="admin-card">
+
+            <label>
+              Nome do CD
+            </label>
+
+            <input
+              id="novoCDNome"
+              placeholder="Ex.: CD Anuar - Feira de Santana">
+
+            <button
+              class="primary"
+              style="
+                width:100%;
+                margin-top:12px;
+              "
+              onclick="cadastrarCDAdmin()">
+
+              Cadastrar CD
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+  carregarCDsAdmin();
+
+}
+
+
+/* ---------- CONECTAR AO PAINEL ---------- */
+
+const abrirAdministracaoOriginal =
+  window.abrirAdministracao;
+
+window.abrirAdministracao =
+  function(){
+
+    abrirAdministracaoOriginal();
+
+    setTimeout(
+      iniciarNovoGerenciamentoUsuarios,
+      50
+    );
+
+  };
+
+
+const adminAbaOriginal =
+  window.adminAba;
+
+window.adminAba =
+  function(nome){
+
+    adminAbaOriginal(nome);
+
+    if(nome === 'usuarios'){
+
+      setTimeout(
+        iniciarNovoGerenciamentoUsuarios,
+        30
+      );
+
+    }
+
+  };
 </script>
 
 </body>
