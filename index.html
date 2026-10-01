@@ -4466,31 +4466,39 @@ async function carregarCDsSelectEdicaoAdmin(cdAtual){
 
 /* ---------- BLOQUEAR / DESBLOQUEAR ---------- */
 
-async function alternarAcessoAdmin(id,ativo){
+async function alternarAcessoAdmin(id, ativo){
 
   if(!ehAdmin()) return;
 
-  const confirmacao =
-    confirm(
-      ativo
-        ? 'Desbloquear o acesso deste usuário?'
-        : 'Bloquear o acesso deste usuário?'
-    );
+  const acao =
+    ativo
+      ? 'desbloquear'
+      : 'bloquear';
+
+  const confirmacao = confirm(
+
+    ativo
+      ? 'Deseja realmente desbloquear o acesso deste usuário?'
+      : 'Deseja realmente bloquear o acesso deste usuário?'
+
+  );
 
   if(!confirmacao) return;
 
-  const {error} =
+  const { error } =
     await supabaseClient
       .from('perfis')
       .update({
         acesso_ativo: ativo
       })
-      .eq('id',id);
+      .eq('id', id);
 
   if(error){
 
     alert(
-      'Erro: ' +
+      'Não foi possível ' +
+      acao +
+      ' o usuário.\n\n' +
       error.message
     );
 
@@ -4501,7 +4509,14 @@ async function alternarAcessoAdmin(id,ativo){
 
   await atualizarDashboardAdmin();
 
+  alert(
+    ativo
+      ? '✅ Usuário desbloqueado com sucesso.'
+      : '🔒 Usuário bloqueado com sucesso.'
+  );
+
 }
+
 
 
 /* ---------- SALVAR EDIÇÃO ---------- */
