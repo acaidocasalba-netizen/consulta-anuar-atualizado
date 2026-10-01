@@ -3276,7 +3276,7 @@ function carregarProdutosAdmin(){
 
             <button
               type="button"
-              onclick="this.closest('.admin-product-menu').classList.remove('open');editarProdutoAdmin(${JSON.stringify(p)})">
+              onclick="this.closest('.admin-product-menu').classList.remove('open');editarProdutoAdminPorId('${esc(p.id)}')">
               ✏️ Editar
             </button>
 
