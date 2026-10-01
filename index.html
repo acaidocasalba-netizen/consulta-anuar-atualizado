@@ -3920,150 +3920,204 @@ async function carregarUsuariosAdmin(){
 
   if(!ehAdmin()) return;
 
-  const body =
-    document.getElementById('adminUsuariosBody');
+  const body = document.getElementById('adminUsuariosBody');
 
   if(!body) return;
 
-  body.innerHTML =
-    '<tr><td colspan="5" class="admin-empty">Carregando...</td></tr>';
+  body.innerHTML = `
+    <div class="admin-empty">
+      Carregando usuários...
+    </div>
+  `;
 
-  let query =
-    supabaseClient
-      .from('perfis')
-      .select(
-        'id,nome,email,tipo,acesso_ativo,criado_em,cd_id'
-      )
-      .order('criado_em',{ascending:false});
+  let query = supabaseClient
+    .from('perfis')
+    .select(`
+      id,
+      nome,
+      email,
+      tipo,
+      acesso_ativo,
+      criado_em,
+      cd_id
+    `)
+    .order('criado_em', {
+      ascending: false
+    });
 
   if(adminUsuariosCDSelecionado){
 
-    query =
-      query.eq(
-        'cd_id',
-        adminUsuariosCDSelecionado
-      );
+    query = query.eq(
+      'cd_id',
+      adminUsuariosCDSelecionado
+    );
 
   }else{
 
-    query =
-      query.is('cd_id',null);
+    query = query.is(
+      'cd_id',
+      null
+    );
 
   }
 
-  const {data,error} = await query;
+  const { data, error } = await query;
 
   if(error){
 
-    body.innerHTML =
-      '<tr><td colspan="5" class="admin-empty">' +
-      esc(error.message || 'Erro ao carregar usuários.') +
-      '</td></tr>';
+    body.innerHTML = `
+      <div class="admin-empty">
+        ${esc(
+          error.message ||
+          'Erro ao carregar usuários.'
+        )}
+      </div>
+    `;
 
     return;
   }
 
-  const busca =
-    (
-      document.getElementById('adminUsuarioBusca')?.value ||
-      ''
-    )
+  const busca = (
+    document.getElementById(
+      'adminUsuarioBusca'
+    )?.value || ''
+  )
     .toLowerCase()
     .trim();
 
   const filtro =
-    document.getElementById('adminUsuarioFiltro')?.value ||
-    'todos';
+    document.getElementById(
+      'adminUsuarioFiltro'
+    )?.value || 'todos';
 
-  const lista =
-    (data || []).filter(usuario => {
+  const lista = (data || []).filter(usuario => {
 
-      const texto =
-        `${usuario.nome || ''} ${usuario.email || ''}`
-        .toLowerCase();
+    const texto = `
+      ${usuario.nome || ''}
+      ${usuario.email || ''}
+    `.toLowerCase();
 
-      if(
-        busca &&
-        !texto.includes(busca)
-      ){
-        return false;
-      }
+    if(
+      busca &&
+      !texto.includes(busca)
+    ){
+      return false;
+    }
 
-      if(
-        filtro === 'ativos' &&
-        !usuario.acesso_ativo
-      ){
-        return false;
-      }
+    if(
+      filtro === 'ativos' &&
+      !usuario.acesso_ativo
+    ){
+      return false;
+    }
 
-      if(
-        filtro === 'bloqueados' &&
-        usuario.acesso_ativo
-      ){
-        return false;
-      }
+    if(
+      filtro === 'bloqueados' &&
+      usuario.acesso_ativo
+    ){
+      return false;
+    }
 
-      if(
-        filtro === 'admin' &&
-        usuario.tipo !== 'admin'
-      ){
-        return false;
-      }
+    if(
+      filtro === 'admin' &&
+      usuario.tipo !== 'admin'
+    ){
+      return false;
+    }
 
-      if(
-        filtro === 'funcionario' &&
-        usuario.tipo !== 'funcionario'
-      ){
-        return false;
-      }
+    if(
+      filtro === 'funcionario' &&
+      usuario.tipo !== 'funcionario'
+    ){
+      return false;
+    }
 
-      return true;
+    return true;
 
-    });
+  });
 
+  if(!lista.length){
 
-  body.innerHTML = lista.length
+    body.innerHTML = `
+      <div class="admin-empty">
+        Nenhum usuário encontrado.
+      </div>
+    `;
 
-    ? lista.map(usuario => `
+    return;
+  }
 
-      <tr>
+  body.innerHTML = lista.map(usuario => {
 
-        <td>
-          ${esc(usuario.nome || '—')}
-        </td>
+    const ativo = !!usuario.acesso_ativo;
 
-        <td>
-          ${esc(usuario.email || '—')}
-        </td>
+    const tipo =
+      usuario.tipo === 'admin'
+        ? 'Administrador'
+        : 'Funcionário';
 
-        <td>
-          ${
-            usuario.tipo === 'admin'
-              ? 'Administrador'
-              : 'Funcionário'
-          }
-        </td>
+    const cdNome =
+      adminCDsCache.find(
+        cd =>
+          String(cd.id) ===
+          String(usuario.cd_id)
+      )?.nome ||
+      'Sem CD';
 
-        <td>
+    return `
+
+      <div class="admin-user-card">
+
+        <div class="admin-user-head">
+
+          <div class="admin-user-main">
+
+            <div class="admin-user-name">
+              ${esc(usuario.nome || 'Sem nome')}
+            </div>
+
+            <div class="admin-user-email">
+              ${esc(usuario.email || 'Sem e-mail')}
+            </div>
+
+          </div>
 
           <span
-            class="admin-badge ${
-              usuario.acesso_ativo
-                ? 'ok'
-                : 'block'
+            class="admin-user-status ${
+              ativo ? 'ok' : 'block'
             }">
 
-            ${
-              usuario.acesso_ativo
-                ? 'Ativo'
-                : 'Bloqueado'
-            }
+            ${ativo ? '● Ativo' : '● Bloqueado'}
 
           </span>
 
-        </td>
+        </div>
 
-        <td>
+        <div class="admin-user-info">
+
+          <div class="admin-user-info-item">
+
+            <small>👤 Tipo</small>
+
+            <strong>
+              ${tipo}
+            </strong>
+
+          </div>
+
+          <div class="admin-user-info-item">
+
+            <small>🏢 Vínculo</small>
+
+            <strong>
+              ${esc(cdNome)}
+            </strong>
+
+          </div>
+
+        </div>
+
+        <div class="admin-user-footer">
 
           <div class="admin-user-actions-wrap">
 
@@ -4092,7 +4146,7 @@ async function carregarUsuariosAdmin(){
               <button
                 type="button"
                 class="${
-                  usuario.acesso_ativo
+                  ativo
                     ? 'danger'
                     : 'success'
                 }"
@@ -4100,12 +4154,12 @@ async function carregarUsuariosAdmin(){
                   fecharAcoesUsuario(this);
                   alternarAcessoAdmin(
                     '${usuario.id}',
-                    ${usuario.acesso_ativo ? 'false' : 'true'}
+                    ${ativo ? 'false' : 'true'}
                   );
                 ">
 
                 ${
-                  usuario.acesso_ativo
+                  ativo
                     ? '🔒 Bloquear'
                     : '🔓 Desbloquear'
                 }
@@ -4116,25 +4170,13 @@ async function carregarUsuariosAdmin(){
 
           </div>
 
-        </td>
+        </div>
 
-      </tr>
+      </div>
 
-    `).join('')
-
-    :
-
-    `
-      <tr>
-        <td
-          colspan="5"
-          class="admin-empty">
-
-          Nenhum usuário encontrado.
-
-        </td>
-      </tr>
     `;
+
+  }).join('');
 
 }
 
