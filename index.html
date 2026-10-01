@@ -3810,26 +3810,8 @@ async function carregarCDsAdmin(){
 
   `).join('');
 
-  lista.innerHTML =
-    cards +
-
-    `
-
-      <div
-        class="admin-cd-card"
-        onclick="abrirCDUsuariosAdmin(null)">
-
-        <div class="admin-cd-icon">📂</div>
-
-        <h4>Sem CD</h4>
-
-        <p>
-          ${contagem['sem-cd'] || 0} usuário(s)
-        </p>
-
-      </div>
-
-    `;
+  lista.innerHTML = cards;
+  
 }
 
 
