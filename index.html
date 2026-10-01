@@ -84,6 +84,78 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
 @media(max-width:650px){.product-result{grid-template-columns:1fr}.product-image{width:100%;height:220px}}
 .product-lightbox{position:fixed;inset:0;z-index:1000001;background:#fff;display:flex;align-items:center;justify-content:center;padding:18px;cursor:zoom-out}.product-lightbox img{width:auto;height:82vh;max-width:92vw;max-height:82vh;object-fit:contain;border-radius:10px;box-shadow:0 18px 50px rgba(0,0,0,.2);background:#fff;cursor:default}.product-lightbox-close{position:absolute;top:16px;right:18px;width:44px;height:44px;padding:0;border-radius:50%;background:#fff;color:#111;font-size:28px;line-height:1}.product-lightbox-close:focus-visible{outline:3px solid #111;outline-offset:3px}
 .admin-photo-preview{display:flex;align-items:center;gap:8px;width:100%;margin-top:6px;color:#555;font-size:11px}.admin-photo-preview img{width:48px;height:48px;object-fit:contain;background:#fff;border:1px solid #ddd;border-radius:6px}.admin-photo-preview.low{color:#b00020}.admin-photo-preview.warn{color:#7a5200}.admin-photo-preview.good{color:#176b31}.admin-photo-actions{display:flex;gap:6px;width:100%;margin-top:6px}.admin-photo-actions button{padding:7px 9px;font-size:12px}.admin-photo-actions .save{background:#16853a;color:#fff}
+.admin-product-menu-wrap{
+  position:relative;
+  display:inline-block;
+}
+
+.admin-product-menu-button{
+  background:#111;
+  color:#fff;
+  border:0;
+  border-radius:8px;
+  padding:9px 14px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.admin-product-menu{
+  display:none;
+  position:absolute;
+  right:0;
+  top:calc(100% + 6px);
+  min-width:190px;
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:10px;
+  padding:6px;
+  box-shadow:0 10px 25px rgba(0,0,0,.18);
+  z-index:10000;
+}
+
+.admin-product-menu.open{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.admin-product-menu button,
+.admin-product-menu label{
+  width:100%;
+  box-sizing:border-box;
+  border:0;
+  border-radius:7px;
+  padding:10px 12px;
+  background:#fff;
+  color:#111;
+  text-align:left;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.admin-product-menu button:hover,
+.admin-product-menu label:hover{
+  background:#f1f1f1;
+}
+
+.admin-product-menu .danger{
+  color:#b00020;
+}
+
+.admin-product-menu .success{
+  color:#176b31;
+}
+
+@media(max-width:768px){
+  .admin-product-menu{
+    position:fixed;
+    right:16px;
+    top:auto;
+    margin-top:6px;
+    min-width:210px;
+  }
+}
 /* ===== MENU PRINCIPAL / MOBILE ===== */
 #menuButton{
   position:fixed;
