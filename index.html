@@ -2438,6 +2438,77 @@ function abrirPedidos(){
   document.body.appendChild(overlay);
   carregarPedidosUsuario();
 }
+async function alterarPedido(id){
+  try{
+    const {data:{user},error:userError}=await supabaseClient.auth.getUser();
+
+    if(userError||!user){
+      alert("Sua sessão não está ativa. Entre novamente.");
+      return;
+    }
+
+    const {data,error}=await supabaseClient
+      .from("pedidos")
+      .select("id,cliente,data,tabela,produtos,subtotal,desconto,desconto_tipo,desconto_valor,total,status,criado_em,atualizado_em")
+      .eq("id",id)
+      .eq("user_id",user.id)
+      .single();
+
+    if(error||!data){
+      console.error("ERRO AO ABRIR PEDIDO:",error);
+      alert("Não foi possível abrir este pedido.");
+      return;
+    }
+
+    pedidoEmEdicaoId=data.id;
+
+    document.getElementById("client").value=data.cliente||"";
+    document.getElementById("date").value=data.data||new Date().toISOString().slice(0,10);
+
+    const tipo=data.desconto_tipo||"percent";
+    document.getElementById("discountType").value=tipo;
+
+    let valor=Number(data.desconto_valor)||0;
+
+    if(!valor&&Number(data.desconto)>0){
+      if(tipo==="percent"&&Number(data.subtotal)>0){
+        valor=(Number(data.desconto)/Number(data.subtotal))*100;
+      }else{
+        valor=Number(data.desconto)||0;
+      }
+    }
+
+    document.getElementById("discountValue").value=valor;
+
+    table=data.tabela==="Salão Bahia"?"salon":"dist";
+
+    document.getElementById("tabDist").classList.toggle("active",table==="dist");
+    document.getElementById("tabSalon").classList.toggle("active",table==="salon");
+
+    order=(Array.isArray(data.produtos)?data.produtos:[]).map(x=>({
+      id:x.id,
+      code:x.code,
+      name:x.name,
+      size:x.size||"",
+      qty:Math.max(1,Number(x.qty)||1),
+      unit:Number(x.unit)||0,
+      table:x.table||table
+    }));
+
+    document.getElementById("pedidosOverlay")?.remove();
+
+    renderOrder();
+
+    document.getElementById("client")?.scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+
+  }catch(e){
+    console.error("ERRO AO EDITAR PEDIDO:",e);
+    alert("Não foi possível abrir o pedido para edição.");
+  }
+}
 async function salvarPedidoNoSupabase(){
   try{
     const {data:{user},error:userError}=await supabaseClient.auth.getUser();
