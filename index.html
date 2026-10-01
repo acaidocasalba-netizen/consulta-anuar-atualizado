@@ -1049,31 +1049,102 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
 </head>
 <body>
 <div class="container">
-  <div class="header">
-    <small>ANUAR COSMÉTICOS</small>
-    <h1>Consulta Anuar</h1>
-    <p>Consulte produtos, monte o pedido e gere o faturamento para o cliente.</p>
+<div class="anuar-pedidos-home">
+
+  <div class="anuar-pedidos-header">
+
+    <button
+      type="button"
+      class="anuar-pedidos-menu"
+      aria-label="Abrir menu"
+      onclick="abrirMenu()">
+
+      ☰
+
+    </button>
+
+
+    <div class="anuar-pedidos-brand">
+
+      <strong>ANUAR</strong>
+
+      <small>
+        COSMÉTICOS PROFISSIONAIS
+      </small>
+
+    </div>
+
+
+    <button
+      type="button"
+      class="anuar-pedidos-cart"
+      aria-label="Ver pedido"
+      onclick="document.getElementById('order')?.scrollIntoView({behavior:'smooth',block:'start'});">
+
+      🛒
+
+      <span
+        id="anuarCartBadge"
+        class="anuar-cart-badge">
+
+        0
+
+      </span>
+
+    </button>
+
   </div>
 
-  <div class="anuar-painel-pedidos">
-    <img src="anuar-painel-pedidos.webp" alt="Anuar Cosméticos">
+
+  <div id="menuBackdrop" onclick="fecharMenu()"></div>
+
+  <div id="menuLateral" aria-hidden="true">
+
+    <button
+      class="menu-close"
+      type="button"
+      aria-label="Fechar menu"
+      onclick="fecharMenu()">
+
+      ✕
+
+    </button>
+
+    <div class="menu-title">
+      MENU
+    </div>
+
+    <a href="#" onclick="fecharMenu();return false;">
+      🏠 Início
+    </a>
+
+    <a
+      href="#order"
+      onclick="fecharMenu();document.getElementById('client')?.scrollIntoView({behavior:'smooth',block:'start'});return false;">
+
+      🛒 Novo pedido
+
+    </a>
+
+    <a href="#" onclick="abrirPedidos();return false;">
+      📋 Pedidos
+    </a>
+
+    <a href="#" onclick="fecharMenu();return false;">
+      👤 Minha conta
+    </a>
+
+    <a
+      href="#"
+      id="menuAdmin"
+      style="display:none;"
+      onclick="abrirAdministracao();return false;">
+
+      👑 Administração
+
+    </a>
+
   </div>
-
-<!-- MENU PRINCIPAL -->
-<button id="menuButton" type="button" aria-label="Abrir menu" onclick="abrirMenu()">☰</button>
-<div id="menuBackdrop" onclick="fecharMenu()"></div>
-
-<div id="menuLateral" aria-hidden="true">
-    <button class="menu-close" type="button" aria-label="Fechar menu" onclick="fecharMenu()">✕</button>
-    <div class="menu-title">MENU</div>
-
-    <a href="#" onclick="fecharMenu();return false;">🏠 Início</a>
-    <a href="#order" onclick="fecharMenu();document.getElementById('client')?.scrollIntoView({behavior:'smooth',block:'start'});return false;">🛒 Novo pedido</a>
-    <a href="#" onclick="abrirPedidos();return false;">📋 Pedidos</a>
-    <a href="#" onclick="fecharMenu();return false;">👤 Minha conta</a>
-
-    <a href="#" id="menuAdmin" style="display:none;" onclick="abrirAdministracao();return false;">👑 Administração</a>
-</div>
   
   <div class="tabs">
     <button id="tabDist" class="tab active" onclick="setTable('dist')">Distribuidor</button>
