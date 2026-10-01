@@ -1483,28 +1483,7 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
     <button class="secondary" style="width:100%;margin-top:8px" onclick="copyInvoice()">Copiar faturamento</button>
   </div>
 </div>
-  .faturamento-dados{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-  gap:10px;
-}
-
-.faturamento-dados > div{
-  min-width:0;
-}
-
-.faturamento-dados input{
-  width:100%;
-  max-width:100%;
-  min-width:0;
-  box-sizing:border-box;
-}
-
-@media(max-width:700px){
-  .faturamento-dados{
-    grid-template-columns:1fr;
-  }
-}
+  
 <script>
 const products = [
   {
