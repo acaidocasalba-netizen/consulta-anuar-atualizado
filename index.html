@@ -1146,17 +1146,101 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
 
   </div>
   
-  <div class="tabs">
-    <button id="tabDist" class="tab active" onclick="setTable('dist')">Distribuidor</button>
-    <button id="tabSalon" class="tab" onclick="setTable('salon')">Salão Bahia</button>
-  </div>
-  <div class="card">
-    <label for="search">CÓDIGO OU NOME DO PRODUTO</label>
-    <div class="searchrow">
-      <input id="search" placeholder="Ex.: 000012 ou Shampoo Dux" oninput="searchProducts()">
-      <button class="primary" onclick="searchProducts()">Pesquisar</button>
+ <div class="anuar-pedidos-home">
+
+  <div class="anuar-pedidos-header">
+
+    <button
+      type="button"
+      class="anuar-pedidos-menu"
+      aria-label="Abrir menu"
+      onclick="abrirMenu()">
+
+      ☰
+
+    </button>
+
+
+    <div class="anuar-pedidos-brand">
+
+      <strong>ANUAR</strong>
+
+      <small>
+        COSMÉTICOS PROFISSIONAIS
+      </small>
+
     </div>
-    <div id="results" class="results"><div class="empty">Digite o código ou nome para pesquisar.</div></div>
+
+
+    <button
+      type="button"
+      class="anuar-pedidos-cart"
+      aria-label="Ver pedido"
+      onclick="document.getElementById('order')?.scrollIntoView({behavior:'smooth',block:'start'});">
+
+      🛒
+
+      <span
+        id="anuarCartBadge"
+        class="anuar-cart-badge">
+
+        0
+
+      </span>
+
+    </button>
+
+  </div>
+
+
+  <div id="menuBackdrop" onclick="fecharMenu()"></div>
+
+  <div id="menuLateral" aria-hidden="true">
+
+    <button
+      class="menu-close"
+      type="button"
+      aria-label="Fechar menu"
+      onclick="fecharMenu()">
+
+      ✕
+
+    </button>
+
+    <div class="menu-title">
+      MENU
+    </div>
+
+    <a href="#" onclick="fecharMenu();return false;">
+      🏠 Início
+    </a>
+
+    <a
+      href="#order"
+      onclick="fecharMenu();document.getElementById('client')?.scrollIntoView({behavior:'smooth',block:'start'});return false;">
+
+      🛒 Novo pedido
+
+    </a>
+
+    <a href="#" onclick="abrirPedidos();return false;">
+      📋 Pedidos
+    </a>
+
+    <a href="#" onclick="fecharMenu();return false;">
+      👤 Minha conta
+    </a>
+
+    <a
+      href="#"
+      id="menuAdmin"
+      style="display:none;"
+      onclick="abrirAdministracao();return false;">
+
+      👑 Administração
+
+    </a>
+
   </div>
   <div class="card">
     <h2 style="margin-top:0">Faturamento / Pedido</h2>
