@@ -1045,6 +1045,99 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
   }
 
 }
+    <div class="anuar-pedidos-banner">
+
+    <img
+      src="anuar-painel-pedidos.webp"
+      alt="Anuar Cosméticos">
+
+    <div class="anuar-pedidos-banner-overlay">
+
+      <div class="anuar-pedidos-banner-title">
+        Beleza profissional<br>
+        em cada resultado.
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="anuar-pedidos-search">
+
+    <span class="anuar-pedidos-search-icon">
+      ⌕
+    </span>
+
+    <input
+      id="search"
+      placeholder="Pesquisar por código ou nome do produto..."
+      oninput="searchProducts()">
+
+    <button
+      type="button"
+      onclick="searchProducts()"
+      aria-label="Pesquisar">
+
+      ⌕
+
+    </button>
+
+  </div>
+
+
+  <div class="anuar-pedidos-section-title">
+
+    <h2>Produtos</h2>
+
+    <span>
+      Escolha uma tabela
+    </span>
+
+  </div>
+
+
+  <div class="tabs">
+
+    <button
+      id="tabDist"
+      class="tab active"
+      onclick="setTable('dist')">
+
+      Distribuidor
+
+    </button>
+
+    <button
+      id="tabSalon"
+      class="tab"
+      onclick="setTable('salon')">
+
+      Salão Bahia
+
+    </button>
+
+  </div>
+
+
+  <div class="anuar-pedidos-section-title">
+
+    <h2>Produtos disponíveis</h2>
+
+    <span>
+      Consulte e adicione ao pedido
+    </span>
+
+  </div>
+
+
+  <div id="results" class="results">
+
+    <div class="empty">
+      Digite o código ou nome para pesquisar.
+    </div>
+
+  </div>
 </style>
 </head>
 <body>
