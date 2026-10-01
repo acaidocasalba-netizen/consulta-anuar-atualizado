@@ -189,6 +189,7 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
 
     <a href="#" onclick="fecharMenu();return false;">🏠 Início</a>
     <a href="#order" onclick="fecharMenu();document.getElementById('client')?.scrollIntoView({behavior:'smooth',block:'start'});return false;">🛒 Novo pedido</a>
+    <a href="#" onclick="abrirPedidos();return false;">📋 Pedidos</a>
     <a href="#" onclick="fecharMenu();return false;">👤 Minha conta</a>
 
     <a href="#" id="menuAdmin" style="display:none;" onclick="abrirAdministracao();return false;">👑 Administração</a>
@@ -2233,6 +2234,7 @@ const products = [
 ];
 let table='dist';
 let order=[];
+let pedidoEmEdicaoId=null;
 const PRODUTO_IMAGENS_BUCKET='produto-imagens';
 const PRODUTO_IMAGENS_CODE_COLUMN='codigo';
 const PRODUTO_IMAGENS_PATH_COLUMN='storage_path';
