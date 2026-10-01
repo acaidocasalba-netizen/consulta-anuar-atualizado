@@ -4527,6 +4527,79 @@ async function alternarAcessoAdmin(id, ativo){
 
 }
 
+  /* ---------- EXCLUIR USUÁRIO ---------- */
+
+async function excluirUsuarioAdmin(id){
+
+  if(!ehAdmin()) return;
+
+  if(!id){
+    alert('Usuário inválido.');
+    return;
+  }
+
+  if(
+    String(id) ===
+    String(supabaseClient.auth.currentUser?.id)
+  ){
+    alert(
+      'Você não pode excluir o seu próprio usuário.'
+    );
+    return;
+  }
+
+  const {data: usuario, error: erroBusca} =
+    await supabaseClient
+      .from('perfis')
+      .select('id,nome,email')
+      .eq('id', id)
+      .single();
+
+  if(erroBusca || !usuario){
+    alert(
+      'Não foi possível localizar o usuário.'
+    );
+    return;
+  }
+
+  const confirmacao = confirm(
+    '⚠️ EXCLUIR USUÁRIO\n\n' +
+    'Nome: ' +
+    (usuario.nome || 'Sem nome') +
+    '\nE-mail: ' +
+    (usuario.email || 'Sem e-mail') +
+    '\n\n' +
+    'Essa ação excluirá o cadastro deste usuário.\n\n' +
+    'Deseja realmente continuar?'
+  );
+
+  if(!confirmacao) return;
+
+  const {error} =
+    await supabaseClient
+      .from('perfis')
+      .delete()
+      .eq('id', id);
+
+  if(error){
+
+    alert(
+      'Não foi possível excluir o usuário.\n\n' +
+      error.message
+    );
+
+    return;
+  }
+
+  await carregarUsuariosAdmin();
+
+  await atualizarDashboardAdmin();
+
+  alert(
+    '🗑️ Usuário excluído com sucesso.'
+  );
+}
+
 
 
 /* ---------- SALVAR EDIÇÃO ---------- */
