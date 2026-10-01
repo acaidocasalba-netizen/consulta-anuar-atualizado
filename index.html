@@ -60,7 +60,17 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
 .admin-close{background:#fff;color:#111;border-radius:10px;padding:10px 14px}
 .admin-body{padding:18px}.admin-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
 .admin-stat{background:#fff;border:1px solid #ddd;border-radius:14px;padding:15px}.admin-stat strong{display:block;font-size:24px;margin-top:5px}.admin-stat small{color:#777}
-.admin-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.admin-nav{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-bottom:14px;
+}
+
+.admin-nav button{
+  width:100%;
+  min-width:0;
+}
 .admin-section{display:none}.admin-section.active{display:block}
 .admin-actions{display:flex;gap:6px;flex-wrap:wrap}.admin-actions button{padding:8px 10px}.admin-badge{display:inline-block;border-radius:20px;padding:4px 8px;font-size:11px;background:#eee}.admin-badge.ok{background:#e7f7ec;color:#176b31}.admin-badge.block{background:#fdeaea;color:#9b1c1c}
 .admin-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.admin-form-grid .full{grid-column:1/-1}
