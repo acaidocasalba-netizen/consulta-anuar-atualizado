@@ -2301,6 +2301,143 @@ function generateInvoice(){if(!order.length){alert('Adicione pelo menos um produ
 async function copyInvoice(){const text=document.getElementById('invoiceText').value;try{await navigator.clipboard.writeText(text);alert('Faturamento copiado!')}catch(e){document.getElementById('invoiceText').select();document.execCommand('copy');alert('Faturamento copiado!')}}
 function sendWhatsApp(){if(!order.length){alert('Adicione pelo menos um produto.');return}window.open('https://wa.me/?text='+encodeURIComponent(invoiceMessage()),'_blank')}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+async function carregarPedidosUsuario(){
+  const box=document.getElementById("pedidosUsuarioLista");
+  if(!box)return;
+
+  box.innerHTML='<div style="padding:20px;text-align:center;color:#777">Carregando pedidos...</div>';
+
+  const {data:{user},error:userError}=await supabaseClient.auth.getUser();
+
+  if(userError||!user){
+    box.innerHTML='<div style="padding:20px;text-align:center;color:#777">Entre novamente para consultar seus pedidos.</div>';
+    return;
+  }
+
+  const {data,error}=await supabaseClient
+    .from("pedidos")
+    .select("id,cliente,data,tabela,produtos,subtotal,desconto,desconto_tipo,desconto_valor,total,status,criado_em,atualizado_em")
+    .eq("user_id",user.id)
+    .order("criado_em",{ascending:false});
+
+  if(error){
+    console.error("ERRO AO CARREGAR PEDIDOS:",error);
+    box.innerHTML='<div style="padding:20px;text-align:center;color:#b00020">Não foi possível carregar os pedidos.</div>';
+    return;
+  }
+
+  if(!data?.length){
+    box.innerHTML='<div style="padding:25px;text-align:center;color:#777">Nenhum pedido faturado ainda.</div>';
+    return;
+  }
+
+  box.innerHTML=data.map(p=>{
+    const itens=Array.isArray(p.produtos)?p.produtos:[];
+    const qtd=itens.reduce((s,x)=>s+(Number(x.qty)||0),0);
+    const dataVisual=formatarDataVisual(p.data);
+    const criado=p.criado_em?new Date(p.criado_em).toLocaleString("pt-BR"):"";
+
+    const statusTexto={
+      pendente:"Pendente",
+      processando:"Processando",
+      concluido:"Concluído",
+      cancelado:"Cancelado"
+    }[p.status]||p.status||"Pendente";
+
+    const detalhes=itens.map(x=>`
+      <div style="padding:7px 0;border-bottom:1px solid #eee">
+        <b>${esc(x.name||"Produto")}</b>
+        <div style="font-size:13px;color:#777">
+          ${x.qty||1}x • Cód. ${esc(x.code||"")} •
+          ${brl(x.unit||0)} =
+          ${brl(x.total||((Number(x.unit)||0)*(Number(x.qty)||1)))}
+        </div>
+      </div>
+    `).join("");
+
+    return `
+      <div style="border:1px solid #ddd;border-radius:14px;padding:14px;margin-bottom:10px;background:#fff">
+
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
+
+          <div>
+            <b>Pedido ${esc(String(p.id).slice(0,8).toUpperCase())}</b>
+
+            <div style="font-size:13px;color:#777;margin-top:4px">
+              ${dataVisual} • ${qtd} item(s) • ${esc(p.tabela||"")}
+            </div>
+          </div>
+
+          <span style="padding:5px 9px;border-radius:999px;background:#f1f1f1;font-size:12px">
+            ${statusTexto}
+          </span>
+
+        </div>
+
+        <div style="margin-top:10px">
+          <b>Cliente:</b> ${esc(p.cliente||"Cliente")}
+        </div>
+
+        <div style="margin-top:10px">
+          <b>Total: ${brl(p.total||0)}</b>
+        </div>
+
+        <details style="margin-top:10px">
+          <summary style="cursor:pointer;font-weight:700">Ver itens</summary>
+          <div style="margin-top:8px">${detalhes}</div>
+        </details>
+
+        <div style="font-size:12px;color:#999;margin-top:10px">
+          Criado em ${esc(criado)}
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button class="primary" onclick="alterarPedido('${p.id}')">✏️ Alterar</button>
+        </div>
+
+      </div>
+    `;
+  }).join("");
+}
+
+function abrirPedidos(){
+  fecharMenu();
+
+  document.getElementById("pedidosOverlay")?.remove();
+
+  const overlay=document.createElement("div");
+  overlay.id="pedidosOverlay";
+  overlay.className="admin-overlay";
+
+  overlay.innerHTML=`
+    <div class="admin-panel" style="max-width:760px;min-height:auto;margin-top:20px">
+
+      <div class="admin-top">
+        <div>
+          <h2>📋 Meus pedidos</h2>
+          <p>Pedidos faturados nesta conta.</p>
+        </div>
+
+        <button class="admin-close" onclick="document.getElementById('pedidosOverlay')?.remove()">
+          Fechar
+        </button>
+      </div>
+
+      <div class="admin-body">
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+          <button class="secondary" onclick="carregarPedidosUsuario()">Atualizar</button>
+        </div>
+
+        <div id="pedidosUsuarioLista"></div>
+
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  carregarPedidosUsuario();
+}
 </script>
 <<!-- SUPABASE AUTH -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
