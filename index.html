@@ -3343,6 +3343,11 @@ function editarProdutoAdmin(p){if(!ehAdmin())return;document.getElementById('adm
 function salvarProdutoAdmin(id,isNew){if(!ehAdmin())return;const list=getAdminProducts();const obj={id:isNew?'prod-'+Date.now():id,code:document.getElementById('apCode').value.trim(),name:document.getElementById('apName').value.trim(),size:document.getElementById('apSize').value.trim(),category:document.getElementById('apCat').value.trim()||'Sem categoria',price:Number(document.getElementById('apPrice').value)||0,salonPrice:document.getElementById('apSalon').value===''?null:Number(document.getElementById('apSalon').value),active:document.getElementById('apActive').value==='true'};if(!obj.code||!obj.name){alert('Informe código e nome.');return}const i=list.findIndex(x=>x.id===id);if(isNew||i<0)list.push(obj);else list[i]=obj;saveAdminProducts(list);document.getElementById('adminEditProduto')?.remove();carregarProdutosAdmin();alert('Produto salvo neste navegador.');}
 function alternarProdutoAdmin(id){if(!ehAdmin())return;const list=getAdminProducts();const p=list.find(x=>x.id===id);if(!p)return;p.active=p.active===false;saveAdminProducts(list);carregarProdutosAdmin();}
 function excluirProdutoAdmin(id){if(!ehAdmin())return;if(!confirm('Excluir este produto do catálogo administrativo?'))return;saveAdminProducts(getAdminProducts().filter(p=>p.id!==id));carregarProdutosAdmin();}
+function editarProdutoAdminPorId(id){
+  const produto=getAdminProducts().find(p=>String(p.id)===String(id));
+  if(!produto)return;
+  editarProdutoAdmin(produto);
+}
 function abrirMenuProduto(botao){
   const menu=botao.parentElement.querySelector('.admin-product-menu');
 
