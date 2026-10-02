@@ -3601,6 +3601,12 @@ function addProduct(id){
  };
 }
 function renderOrder(){
+ const badge=document.getElementById('anuarCartBadge');
+ if(badge){
+   const quantidade=order.reduce((total,item)=>total+(Number(item.qty)||0),0);
+   badge.textContent=quantidade;
+ }
+
  const box=document.getElementById('order');
  if(!order.length)box.innerHTML='<div class="empty">Nenhum produto adicionado.</div>';else box.innerHTML=order.map((x,i)=>`<div class="order-row"><div><b>${esc(x.name)}</b><div class="meta">Código ${x.code}${x.size?' • '+esc(x.size):''} • ${x.table==='salon'?'Salão Bahia':'Distribuidor'}</div></div><input class="qty" type="number" min="1" value="${x.qty}" onchange="changeQty(${i},this.value)"><b>${brl(x.unit*x.qty)}</b><button class="secondary" onclick="removeItem(${i})">×</button></div>`).join('');
  const d=getDiscount();document.getElementById('subtotal').textContent=brl(d.subtotal);document.getElementById('discountApplied').textContent='-'+brl(d.discount);document.getElementById('total').textContent=brl(d.total)
