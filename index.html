@@ -1439,9 +1439,7 @@ input,select,button,textarea{font:inherit}input,select{width:100%;padding:13px;b
 
     <h2>Produtos disponíveis</h2>
 
-    <span>
-      Consulte e adicione ao pedido
-    </span>
+    <button class="secondary" type="button" onclick="searchProducts(true)">Atualizar catálogo</button>
 
   </div>
 
@@ -3488,7 +3486,100 @@ const PRODUTO_IMAGENS_BUCKET='produto-imagens';
 const PRODUTO_IMAGENS_CODE_COLUMN='codigo';
 const PRODUTO_IMAGENS_PATH_COLUMN='storage_path';
 const produtoImagens=new Map();
+const falhasCarregamentoImagemProduto=new Set();
+let estadoImagensProdutos='idle';
+let revisaoCarregamentoImagensProdutos=0;
+let produtosSupabase=[];
+let estadoCatalogoProdutos='idle';
+let carregamentoCatalogoProdutos=null;
+let erroCatalogoProdutos=null;
 const brl=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
+function normalizarCodigoProduto(value){
+ const code=String(value??'');
+ if(!code||code!==code.trim()||! /^[A-Za-z0-9._-]{1,64}$/.test(code)){
+  throw new Error('Use um código de 1 a 64 caracteres, sem espaços. O código será mantido exatamente como informado.');
+ }
+ return code;
+}
+function produtoDoBanco(row){
+ const code=String(row.codigo);
+ return {
+  id:code,code,category:row.categoria||'Sem categoria',name:row.nome,
+  size:row.tamanho||'',price:Number(row.preco_distribuidor),
+  salonPrice:row.preco_salao_bahia==null?null:Number(row.preco_salao_bahia),
+  active:row.ativo===true
+ };
+}
+function produtoParaBanco(produto){
+ const code=normalizarCodigoProduto(produto.code);
+ const name=String(produto.name??'').trim();
+ if(!name)throw new Error('Informe o nome do produto.');
+ const parsePrice=(value,label,nullable=false)=>{
+  if(nullable&&(value==null||value===''))return null;
+  const number=Number(value);
+  if(!Number.isFinite(number)||number<0||number>9999999999.99||Math.abs(number*100-Math.round(number*100))>1e-7){
+   throw new Error(`${label} deve ser um valor válido com até duas casas decimais.`);
+  }
+  return Number(number.toFixed(2));
+ };
+ return {
+  codigo:code,categoria:String(produto.category||'Sem categoria').trim()||'Sem categoria',
+  nome:name,tamanho:String(produto.size??'').trim(),
+  preco_distribuidor:parsePrice(produto.price,'Preço distribuidor'),
+  preco_salao_bahia:parsePrice(produto.salonPrice,'Preço Salão Bahia',true),
+  ativo:produto.active!==false
+ };
+}
+function getAdminProducts(){
+ const remotoPorCodigo=new Map(produtosSupabase.map(row=>[String(row.code),row]));
+ const codigosOriginais=new Set(products.map(p=>String(p.code)));
+ const combinado=products.map(original=>{
+  const remoto=remotoPorCodigo.get(String(original.code));
+  return {
+   ...original,category:'Sem categoria',active:true,
+   ...(remoto?{code:remoto.code,category:remoto.category,name:remoto.name,size:remoto.size,price:remoto.price,salonPrice:remoto.salonPrice,active:remoto.active}: {})
+  };
+ });
+ for(const remoto of produtosSupabase){
+  if(!codigosOriginais.has(String(remoto.code)))combinado.push({...remoto,id:remoto.code});
+ }
+ return combinado;
+}
+async function obterPerfilCatalogo({admin=false}={}){
+ const {data:{user},error:userError}=await supabaseClient.auth.getUser();
+ if(userError||!user)throw new Error('Sessão Supabase ausente ou expirada. Entre novamente.');
+ const {data:perfil,error:perfilError}=await supabaseClient.from('perfis').select('id,tipo,acesso_ativo').eq('id',user.id).single();
+ if(perfilError||!perfil||perfil.id!==user.id||perfil.acesso_ativo!==true)throw new Error('Usuário sem perfil ativo no Supabase. Entre novamente ou solicite a liberação do acesso.');
+ if(admin&&perfil.tipo!=='admin')throw new Error('Acesso restrito a administradores ativos.');
+ return {user,perfil};
+}
+async function carregarCatalogoProdutos({force=false}={}){
+ if(carregamentoCatalogoProdutos)return carregamentoCatalogoProdutos;
+ if(estadoCatalogoProdutos==='ready'&&!force)return produtosSupabase;
+ estadoCatalogoProdutos='loading';erroCatalogoProdutos=null;
+ carregamentoCatalogoProdutos=(async()=>{
+  try{
+   await obterPerfilCatalogo();
+   const rows=[],pageSize=1000;
+   for(let from=0;;from+=pageSize){
+    const {data,error}=await supabaseClient.from('produtos').select('codigo,categoria,nome,tamanho,preco_distribuidor,preco_salao_bahia,ativo,criado_em,atualizado_em').order('codigo',{ascending:true}).range(from,from+pageSize-1);
+    if(error)throw error;
+    rows.push(...(data||[]));
+    if(!data||data.length<pageSize)break;
+   }
+   produtosSupabase=rows.map(produtoDoBanco);
+   estadoCatalogoProdutos='ready';
+   return produtosSupabase;
+  }catch(error){
+   erroCatalogoProdutos=error;estadoCatalogoProdutos='error';throw error;
+  }finally{carregamentoCatalogoProdutos=null;}
+ })();
+ return carregamentoCatalogoProdutos;
+}
+async function validarAdminProdutos(){
+ try{await obterPerfilCatalogo({admin:true});return true;}
+ catch(error){alert(error.message||'Não foi possível validar a autorização no Supabase.');return false;}
+}
 function formatarDataVisual(value){
  const text=String(value||'').trim();
  if(!text)return '';
@@ -3516,51 +3607,133 @@ function imagemProdutoHtml(codigo,classe='product-image'){
  const ampliar=classe.includes('admin')?'':' onclick="abrirImagemProduto(this.src,this.alt)"';
  return imagem?.url?`<img class="${classe}" src="${esc(imagem.url)}" alt="Foto do produto ${esc(codigo)}" loading="lazy"${ampliar}>`:`<div class="${classe} ${classe.includes('admin')?'admin-product-image-placeholder':'product-image-placeholder'}">Sem foto</div>`;
 }
-function searchProducts(){
- const q=document.getElementById('search').value.trim().toLowerCase(),box=document.getElementById('results');
- if(!q){box.innerHTML='<div class="empty">Digite o código ou nome para pesquisar.</div>';return}
-const found=getAdminProducts().filter(p=>p.active!==false).filter(p=>{const hay=(p.code+' '+p.name+' '+p.size).toLowerCase();return hay.includes(q)&&(table==='dist'||p.salonPrice!==null)}).slice(0,50);
- if(!found.length){box.innerHTML='<div class="empty">Nenhum produto encontrado.</div>';return}
-box.innerHTML=`<div class="anuar-product-grid">${found.map(p=>`
-  <div class="anuar-product-card">
-    <div class="anuar-product-photo">
-      ${imagemProdutoHtml(p.code,'anuar-product-image')}
-    </div>
-
-    <div class="anuar-product-content">
-      <div class="anuar-product-code">CÓD. ${esc(p.code)}</div>
-
-      <h3 class="anuar-product-name">${esc(p.name)}</h3>
-
-      ${p.size?`<div class="anuar-product-size">${esc(p.size)}</div>`:''}
-
-      <div class="anuar-product-bottom">
-        <div>
-          <small>Preço</small>
-          <strong>${brl(priceOf(p))}</strong>
-          ${table==='dist'&&p.salonPrice!==null?`
-            <div class="anuar-product-secondary">
-              Salão Bahia: ${brl(p.salonPrice)}
-            </div>
-          `:''}
-        </div>
-
-        <button
-          type="button"
-          class="anuar-product-add"
-          onclick="addProduct('${p.id}')"
-          aria-label="Adicionar produto">
-          ＋
-        </button>
-      </div>
-    </div>
-  </div>
-`).join('')}</div>`; 
+function chaveRenderizacaoProduto(produto){
+ const id=String(produto.id??'').trim();
+ if(id)return 'id:'+id+'|codigo:'+String(produto.code??'');
+ return 'produto:'+String(produto.code??'')+'|'+String(produto.name??'')+'|'+String(produto.size??'');
+}
+function criarPlaceholderImagemProduto(texto){
+ const placeholder=document.createElement('div');
+ placeholder.className='anuar-product-image anuar-product-image-placeholder';
+ placeholder.textContent=texto;
+ return placeholder;
+}
+function mostrarPlaceholderImagemProduto(area,texto){
+ const atual=area.firstElementChild;
+ if(atual?.classList.contains('anuar-product-image-placeholder')&&atual.textContent===texto)return;
+ area.replaceChildren(criarPlaceholderImagemProduto(texto));
+}
+function atualizarImagemCardProduto(card,produto,indice){
+ const area=card.querySelector('.anuar-product-photo');
+ if(!area)return;
+ const url=produtoImagens.get(String(produto.code))?.url||null;
+ let imagemAtual=area.querySelector('img');
+ if(!url){
+  if(imagemAtual&&estadoImagensProdutos==='loading')return;
+  const texto=estadoImagensProdutos==='loading'||estadoImagensProdutos==='idle'?'Carregando foto…':estadoImagensProdutos==='error'?'Foto indisponível':'Sem foto';
+  mostrarPlaceholderImagemProduto(area,texto);
+  return;
+ }
+ if(falhasCarregamentoImagemProduto.has(url)){
+  mostrarPlaceholderImagemProduto(area,'Foto indisponível');
+  return;
+ }
+ if(imagemAtual&&imagemAtual.dataset.url!==url){imagemAtual.remove();imagemAtual=null;}
+ if(!imagemAtual){
+  imagemAtual=document.createElement('img');
+  imagemAtual.className='anuar-product-image';
+  imagemAtual.decoding='async';
+  imagemAtual.dataset.url=url;
+  imagemAtual.onclick=()=>abrirImagemProduto(imagemAtual.dataset.url,imagemAtual.alt);
+  imagemAtual.onerror=()=>{
+   if(imagemAtual.dataset.url!==url)return;
+   falhasCarregamentoImagemProduto.add(url);
+   if(imagemAtual.isConnected)mostrarPlaceholderImagemProduto(area,'Foto indisponível');
+  };
+  area.replaceChildren(imagemAtual);
+ }
+ imagemAtual.alt='Foto do produto '+String(produto.code);
+ imagemAtual.loading=indice<4?'eager':'lazy';
+ imagemAtual.setAttribute('fetchpriority',indice<2?'high':'auto');
+ if(imagemAtual.getAttribute('src')!==url)imagemAtual.src=url;
+}
+function criarCardPesquisaProduto(){
+ const card=document.createElement('div');card.className='anuar-product-card';
+ const foto=document.createElement('div');foto.className='anuar-product-photo';
+ const conteudo=document.createElement('div');conteudo.className='anuar-product-content';
+ const codigo=document.createElement('div');codigo.className='anuar-product-code';
+ const nome=document.createElement('h3');nome.className='anuar-product-name';
+ const tamanho=document.createElement('div');tamanho.className='anuar-product-size';
+ const inferior=document.createElement('div');inferior.className='anuar-product-bottom';
+ const precoBox=document.createElement('div');
+ const rotulo=document.createElement('small');rotulo.textContent='Preço';
+ const preco=document.createElement('strong');preco.className='anuar-product-price';
+ const precoSecundario=document.createElement('div');precoSecundario.className='anuar-product-secondary';
+ const botao=document.createElement('button');botao.type='button';botao.className='anuar-product-add';botao.setAttribute('aria-label','Adicionar produto');botao.textContent='＋';
+ botao.onclick=()=>addProduct(card.dataset.productId);
+ precoBox.append(rotulo,preco,precoSecundario);inferior.append(precoBox,botao);conteudo.append(codigo,nome,tamanho,inferior);card.append(foto,conteudo);
+ return card;
+}
+function atualizarCardPesquisaProduto(card,produto,chave,indice){
+ card.dataset.productKey=chave;card.dataset.productId=String(produto.id);
+ card.querySelector('.anuar-product-code').textContent='CÓD. '+String(produto.code);
+ card.querySelector('.anuar-product-name').textContent=String(produto.name||'');
+ const tamanho=card.querySelector('.anuar-product-size');
+ tamanho.textContent=String(produto.size||'');tamanho.style.display=produto.size?'':'none';
+ card.querySelector('.anuar-product-price').textContent=brl(priceOf(produto));
+ const secundario=card.querySelector('.anuar-product-secondary');
+ const mostrarSecundario=table==='dist'&&produto.salonPrice!==null;
+ secundario.textContent=mostrarSecundario?'Salão Bahia: '+brl(produto.salonPrice):'';
+ secundario.style.display=mostrarSecundario?'':'none';
+ atualizarImagemCardProduto(card,produto,indice);
+}
+function renderizarPesquisaProdutos(){
+ const campo=document.getElementById('search'),box=document.getElementById('results');
+ if(!campo||!box)return;
+ if(estadoCatalogoProdutos==='loading'||estadoCatalogoProdutos==='idle'){
+  box.innerHTML='<div class="empty" role="status">Carregando catálogo...</div>';return;
+ }
+ if(estadoCatalogoProdutos==='error'){
+  box.innerHTML=`<div class="empty" role="alert">Não foi possível carregar o catálogo do Supabase: ${esc(erroCatalogoProdutos?.message||'erro de rede ou autorização')}<br><button class="secondary" style="margin-top:10px" onclick="searchProducts(true)">Tentar novamente</button></div>`;return;
+ }
+ const q=campo.value.trim().toLowerCase();
+ if(!q){box.innerHTML='<div class="empty">Digite o código ou nome para pesquisar.</div>';return;}
+ const encontrados=getAdminProducts().filter(p=>p.active!==false).filter(p=>{
+  const hay=(p.code+' '+p.name+' '+p.size).toLowerCase();
+  return hay.includes(q)&&(table==='dist'||p.salonPrice!==null);
+ }).slice(0,50);
+ if(!encontrados.length){box.innerHTML='<div class="empty">Nenhum produto encontrado.</div>';return;}
+  let grid=box.querySelector('.anuar-product-grid');
+  if(!grid){box.replaceChildren();grid=document.createElement('div');grid.className='anuar-product-grid';box.appendChild(grid);}
+  const existentes=new Map(Array.from(grid.children).map(card=>[card.dataset.productKey,card]));
+  let indice=0;
+  for(const produto of encontrados){
+   const chave=chaveRenderizacaoProduto(produto);
+   let card=existentes.get(chave);
+   if(card)existentes.delete(chave);else card=criarCardPesquisaProduto();
+   atualizarCardPesquisaProduto(card,produto,chave,indice);
+   const atual=grid.children[indice];
+   if(atual!==card)grid.insertBefore(card,atual||null);
+   indice++;
+  }
+  for(const card of existentes.values())card.remove();
+}
+async function searchProducts(forceReload=false){
+ const box=document.getElementById('results');
+ if(!box)return;
+ if(forceReload||estadoCatalogoProdutos==='idle'||estadoCatalogoProdutos==='error')estadoCatalogoProdutos='idle';
+ if(estadoCatalogoProdutos!=='ready'){
+  box.innerHTML='<div class="empty" role="status">Carregando catálogo...</div>';
+  try{await carregarCatalogoProdutos({force:forceReload});}
+  catch(error){erroCatalogoProdutos=error;estadoCatalogoProdutos='error';}
+ }
+ renderizarPesquisaProdutos();
 }
 
 function addProduct(id){
-  const p=products.find(x=>x.id===id);
-  if(!p)return;
+  if(estadoCatalogoProdutos!=='ready')return;
+  const p=getAdminProducts().find(x=>String(x.id)===String(id));
+  if(!p||p.active===false)return;
 
   const existing=order.find(x=>x.id===id&&x.table===table);
 
@@ -3979,14 +4152,30 @@ async function urlImagemProduto(row){
   return data?.publicUrl||null;
 }
 async function carregarImagensProdutos(){
-  const {data,error}=await supabaseClient.from('produto_imagens').select('*');
-  if(error){console.warn('Não foi possível carregar as imagens dos produtos:',error);produtoImagens.clear();searchProducts();return;}
-  produtoImagens.clear();
-  await Promise.all((data||[]).map(async row=>{
-    const codigo=row?.[PRODUTO_IMAGENS_CODE_COLUMN]||row?.codigo_produto||row?.produto_codigo;
-    if(codigo!=null)produtoImagens.set(String(codigo),{url:await urlImagemProduto(row),path:imagemStoragePath(row)});
-  }));
-  searchProducts();
+  const revisao=++revisaoCarregamentoImagensProdutos;
+  estadoImagensProdutos='loading';
+  try{
+    const {data,error}=await supabaseClient.from('produto_imagens').select('*');
+    if(error)throw error;
+    const imagensCarregadas=new Map();
+    await Promise.all((data||[]).map(async row=>{
+      const codigo=row?.[PRODUTO_IMAGENS_CODE_COLUMN]||row?.codigo_produto||row?.produto_codigo;
+      if(codigo!=null)imagensCarregadas.set(String(codigo),{url:await urlImagemProduto(row),path:imagemStoragePath(row)});
+    }));
+    if(revisao!==revisaoCarregamentoImagensProdutos)return;
+    produtoImagens.clear();
+    for(const [codigo,imagem] of imagensCarregadas)produtoImagens.set(codigo,imagem);
+    estadoImagensProdutos='ready';
+  }catch(error){
+    if(revisao!==revisaoCarregamentoImagensProdutos)return;
+    console.warn('Não foi possível carregar as imagens dos produtos:',error);
+    estadoImagensProdutos='error';
+  }finally{
+    if(revisao===revisaoCarregamentoImagensProdutos){
+      renderizarPesquisaProdutos();
+      if(document.querySelector('#adminOverlay .admin-section[data-section="produtos"].active'))filtrarProdutosAdmin();
+    }
+  }
 }
 async function adminImagemAutorizado(){
   if(!ehAdmin())return false;
@@ -4223,18 +4412,61 @@ function liberarSite() {
   if (menuButton) menuButton.style.display = "flex";
 }
 
+async function ativarSessaoAutorizada(perfil) {
+  sessionStorage.setItem("consulta_anuar_tipo", perfil.tipo || "usuario");
+  sessionStorage.setItem("consulta_anuar_admin", perfil.tipo === "admin" ? "1" : "0");
+  sessionStorage.setItem("consulta_anuar_acesso", perfil.acesso_ativo === true ? "1" : "0");
+  liberarSite();
+  configurarMenuAdmin(perfil);
+  void carregarImagensProdutos();
+  await carregarCatalogoProdutos({force:true}).catch(error=>{erroCatalogoProdutos=error;estadoCatalogoProdutos='error';});
+  renderizarPesquisaProdutos();
+}
+
 
 /* ================================
    VERIFICAR ACESSO
 ================================ */
 
 async function verificarAcesso() {
-
   mostrarLogin();
-  await supabaseClient.auth.signOut();
-
   sessionStorage.removeItem("consulta_anuar_logado");
   sessionStorage.removeItem("consulta_anuar_aberta");
+  sessionStorage.removeItem("consulta_anuar_tipo");
+  sessionStorage.removeItem("consulta_anuar_admin");
+  sessionStorage.removeItem("consulta_anuar_acesso");
+
+  try {
+    const {data:{session},error:sessionError}=await supabaseClient.auth.getSession();
+    if(sessionError||!session?.user)return;
+    const {data:{user},error:userError}=await supabaseClient.auth.getUser();
+    if(userError||!user){
+      await supabaseClient.auth.signOut();
+      return;
+    }
+    const {data:perfil,error:erroPerfil}=await supabaseClient
+      .from("perfis")
+      .select("tipo, acesso_ativo")
+      .eq("id",user.id)
+      .single();
+    if(erroPerfil){
+      console.error("ERRO AO VALIDAR PERFIL:",erroPerfil);
+      const mensagem=document.getElementById("loginMensagem");
+      if(mensagem)mensagem.textContent="Não foi possível verificar seu acesso. Confira a conexão e tente novamente.";
+      return;
+    }
+    if(!perfil||perfil.acesso_ativo!==true){
+      await supabaseClient.auth.signOut();
+      const mensagem=document.getElementById("loginMensagem");
+      if(mensagem)mensagem.textContent="Seu acesso está bloqueado. Procure o administrador.";
+      return;
+    }
+    await ativarSessaoAutorizada(perfil);
+  } catch(error) {
+    console.error("ERRO AO RESTAURAR SESSÃO:",error);
+    const mensagem=document.getElementById("loginMensagem");
+    if(mensagem)mensagem.textContent="Não foi possível validar sua sessão. Confira a conexão e tente novamente.";
+  }
 }
 
 
@@ -4288,6 +4520,7 @@ if (erroPerfil) {
     console.error("ERRO PERFIL:", erroPerfil);
     mensagem.textContent =
         "ERRO PERFIL: " + (erroPerfil.message || JSON.stringify(erroPerfil));
+    await supabaseClient.auth.signOut();
     return;
 }
 
@@ -4298,13 +4531,7 @@ if (!perfil || perfil.acesso_ativo !== true) {
     return;
   }
 
-  sessionStorage.setItem("consulta_anuar_tipo", perfil.tipo || "usuario");
-  sessionStorage.setItem("consulta_anuar_admin", perfil.tipo === "admin" ? "1" : "0");
-  sessionStorage.setItem("consulta_anuar_acesso", perfil.acesso_ativo === true ? "1" : "0");
-
-  liberarSite();
-  configurarMenuAdmin(perfil);
-  carregarImagensProdutos();
+  await ativarSessaoAutorizada(perfil);
   
 }
 
@@ -4340,7 +4567,7 @@ function adminAba(nome){
   document.querySelectorAll(".admin-section").forEach(s=>s.classList.toggle("active",s.dataset.section===nome));
   if(nome==='dashboard') atualizarDashboardAdmin();
   if(nome==='usuarios') carregarUsuariosAdmin();
-  if(nome==='produtos') carregarProdutosAdmin();
+  if(nome==='produtos') carregarProdutosAdmin(true);
 }
 
 function abrirAdministracao(){
@@ -4357,7 +4584,7 @@ function abrirAdministracao(){
         <div class="admin-stat"><small>👥 Usuários</small><strong id="adminStatUsuarios">—</strong></div>
         <div class="admin-stat"><small>✅ Ativos</small><strong id="adminStatAtivos">—</strong></div>
         <div class="admin-stat"><small>🚫 Bloqueados</small><strong id="adminStatBloqueados">—</strong></div>
-        <div class="admin-stat"><small>📦 Produtos</small><strong>${products.length}</strong></div>
+        <div class="admin-stat"><small>📦 Produtos</small><strong id="adminStatProdutos">${products.length}</strong></div>
       </div>
       <div class="admin-nav">
         <button class="secondary active" data-aba="dashboard" onclick="adminAba('dashboard')">📊 Dashboard</button>
@@ -4386,7 +4613,7 @@ function abrirAdministracao(){
         <div class="admin-card"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Tipo</th><th>Acesso</th><th>Ações</th></tr></thead><tbody id="adminUsuariosBody"><tr><td colspan="5" class="admin-empty">Carregando...</td></tr></tbody></table></div></div>
       </section>
       <section class="admin-section" data-section="produtos">
-        <div class="admin-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">📦 Gerenciar produtos</h3><p class="admin-muted">Código, nome, categoria, preços e ativo/inativo.</p></div><button class="primary" onclick="novoProdutoAdmin()">➕ Cadastrar produto</button></div><input id="adminProdutoBusca" placeholder="Pesquisar produto, código ou categoria" oninput="carregarProdutosAdmin()" style="margin-top:10px"></div>
+        <div class="admin-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">📦 Gerenciar produtos</h3><p class="admin-muted">Código, nome, categoria, preços e ativo/inativo.</p></div><div class="admin-actions"><button class="secondary" onclick="carregarProdutosAdmin(true)">Atualizar catálogo</button><button class="secondary" onclick="prepararMigracaoProdutosAdmin()">Migrar dados locais</button><button class="primary" onclick="novoProdutoAdmin()">➕ Cadastrar produto</button></div></div><input id="adminProdutoBusca" placeholder="Pesquisar produto, código ou categoria" oninput="filtrarProdutosAdmin()" style="margin-top:10px"><p class="admin-warning" style="margin:8px 0 0;padding:8px">Conflito na lista original: o código 004006 aparece em dois produtos. Ações administrativas para esse código estão bloqueadas até que a origem seja corrigida sem ambiguidade.</p></div>
         <div class="admin-card"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Foto</th><th>Código</th><th>Nome</th><th>Categoria</th><th>Distribuidor</th><th>Salão Bahia</th><th>Status</th><th>Ações</th></tr></thead><tbody id="adminProdutosBody"></tbody></table></div></div>
       </section>
     </div>
@@ -4427,21 +4654,34 @@ function editarPerfilAdmin(u){
 }
 async function salvarPerfilAdmin(id){if(!ehAdmin())return;const payload={nome:document.getElementById('admNome').value.trim(),tipo:document.getElementById('admTipo').value,acesso_ativo:document.getElementById('admAcesso').value==='true'};const {error}=await supabaseClient.from('perfis').update(payload).eq('id',id);if(error){alert('Não foi possível salvar: '+error.message);return}document.getElementById('adminEditModal')?.remove();carregarUsuariosAdmin();alert('Usuário atualizado com sucesso.');}
 
-function getAdminProducts(){try{return JSON.parse(localStorage.getItem('consulta_anuar_admin_products')||'null')||products.map(p=>({...p,category:p.category||'Sem categoria',active:true}));}catch(e){return products.map(p=>({...p,category:p.category||'Sem categoria',active:true}));}}
-function saveAdminProducts(list){localStorage.setItem('consulta_anuar_admin_products',JSON.stringify(list));}
-function carregarProdutosAdmin(){
-  if(!ehAdmin())return;
-
-  const body=document.getElementById('adminProdutosBody');
-  if(!body)return;
-
-  const q=(document.getElementById('adminProdutoBusca')?.value||'').toLowerCase().trim();
-
-  const list=getAdminProducts().filter(p=>
-    !q||`${p.code} ${p.name} ${p.size||''} ${p.category||''}`.toLowerCase().includes(q)
-  );
-
-  body.innerHTML=list.length?list.map(p=>`
+function incorporarProdutoBanco(row){
+ const salvo=produtoDoBanco(row);
+ produtosSupabase=produtosSupabase.filter(p=>String(p.code)!==salvo.code).concat(salvo);
+ estadoCatalogoProdutos='ready';erroCatalogoProdutos=null;
+ renderizarPesquisaProdutos();filtrarProdutosAdmin();
+}
+function removerProdutoBancoDoCache(codigo){
+ produtosSupabase=produtosSupabase.filter(p=>String(p.code)!==String(codigo));
+ renderizarPesquisaProdutos();filtrarProdutosAdmin();
+}
+async function carregarProdutosAdmin(force=false){
+ const body=document.getElementById('adminProdutosBody');
+ if(!body)return;
+ if(!await validarAdminProdutos()){body.innerHTML='<tr><td colspan="8" class="admin-empty">A sessão não tem autorização administrativa ativa.</td></tr>';return;}
+ if(force||estadoCatalogoProdutos!=='ready'){
+  body.innerHTML='<tr><td colspan="8" class="admin-empty">Carregando catálogo do Supabase...</td></tr>';
+  try{await carregarCatalogoProdutos({force:true});}
+  catch(error){body.innerHTML=`<tr><td colspan="8" class="admin-empty">Não foi possível carregar os produtos do Supabase: ${esc(error.message||'erro de rede ou autorização')}</td></tr>`;return;}
+ }
+ filtrarProdutosAdmin();
+}
+function filtrarProdutosAdmin(){
+ const body=document.getElementById('adminProdutosBody');
+ if(!body||estadoCatalogoProdutos!=='ready')return;
+ const total=document.getElementById('adminStatProdutos');if(total)total.textContent=getAdminProducts().length;
+ const q=(document.getElementById('adminProdutoBusca')?.value||'').toLowerCase().trim();
+ const list=getAdminProducts().filter(p=>!q||`${p.code} ${p.name} ${p.size||''} ${p.category||''}`.toLowerCase().includes(q));
+ body.innerHTML=list.length?list.map(p=>`
     <tr>
       <td>${imagemProdutoHtml(p.code,'admin-product-image')}</td>
 
@@ -4500,14 +4740,14 @@ function carregarProdutosAdmin(){
             <button
               type="button"
               class="${p.active!==false?'':'success'}"
-              onclick="this.closest('.admin-product-menu').classList.remove('open');alternarProdutoAdmin('${p.id}')">
+              onclick="this.closest('.admin-product-menu').classList.remove('open');alternarProdutoAdmin('${esc(p.id)}')">
               ${p.active!==false?'⏸️ Desativar':'▶️ Ativar'}
             </button>
 
             <button
               type="button"
               class="danger"
-              onclick="this.closest('.admin-product-menu').classList.remove('open');excluirProdutoAdmin('${p.id}')">
+              onclick="this.closest('.admin-product-menu').classList.remove('open');excluirProdutoAdmin('${esc(p.id)}')">
               ❌ Excluir
             </button>
 
@@ -4556,14 +4796,151 @@ function carregarProdutosAdmin(){
   `).join(''):'<tr><td colspan="8" class="admin-empty">Nenhum produto encontrado.</td></tr>';
 }
 function novoProdutoAdmin(){editarProdutoAdmin({id:'novo-'+Date.now(),code:'',name:'',size:'',category:'',price:0,salonPrice:null,active:true,isNew:true});}
-function editarProdutoAdmin(p){if(!ehAdmin())return;document.getElementById('adminEditProduto')?.remove();const m=document.createElement('div');m.id='adminEditProduto';m.className='admin-overlay';m.innerHTML=`<div class="admin-panel" style="max-width:650px;min-height:auto;margin-top:25px"><div class="admin-top"><div><h2>📦 ${p.isNew?'Cadastrar':'Editar'} produto</h2></div><button class="admin-close" onclick="this.closest('.admin-overlay').remove()">Fechar</button></div><div class="admin-body"><div class="admin-card"><div class="admin-edit-grid"><div><label>Código</label><input id="apCode" value="${esc(p.code||'')}"></div><div><label>Categoria</label><input id="apCat" value="${esc(p.category||'')}"></div><div class="full"><label>Nome</label><input id="apName" value="${esc(p.name||'')}"></div><div><label>Tamanho</label><input id="apSize" value="${esc(p.size||'')}"></div><div><label>Preço Distribuidor</label><input id="apPrice" type="number" step="0.01" min="0" value="${p.price??0}"></div><div><label>Preço Salão Bahia</label><input id="apSalon" type="number" step="0.01" min="0" value="${p.salonPrice??''}"></div><div><label>Status</label><select id="apActive"><option value="true">Ativo</option><option value="false">Inativo</option></select></div></div><button class="primary" style="width:100%;margin-top:12px" onclick="salvarProdutoAdmin('${p.id}',${p.isNew?'true':'false'})">Salvar produto</button></div></div></div>`;document.body.appendChild(m);document.getElementById('apActive').value=p.active===false?'false':'true';}
-function salvarProdutoAdmin(id,isNew){if(!ehAdmin())return;const list=getAdminProducts();const obj={id:isNew?'prod-'+Date.now():id,code:document.getElementById('apCode').value.trim(),name:document.getElementById('apName').value.trim(),size:document.getElementById('apSize').value.trim(),category:document.getElementById('apCat').value.trim()||'Sem categoria',price:Number(document.getElementById('apPrice').value)||0,salonPrice:document.getElementById('apSalon').value===''?null:Number(document.getElementById('apSalon').value),active:document.getElementById('apActive').value==='true'};if(!obj.code||!obj.name){alert('Informe código e nome.');return}const i=list.findIndex(x=>x.id===id);if(isNew||i<0)list.push(obj);else list[i]=obj;saveAdminProducts(list);document.getElementById('adminEditProduto')?.remove();carregarProdutosAdmin();alert('Produto salvo neste navegador.');}
-function alternarProdutoAdmin(id){if(!ehAdmin())return;const list=getAdminProducts();const p=list.find(x=>x.id===id);if(!p)return;p.active=p.active===false;saveAdminProducts(list);carregarProdutosAdmin();}
-function excluirProdutoAdmin(id){if(!ehAdmin())return;if(!confirm('Excluir este produto do catálogo administrativo?'))return;saveAdminProducts(getAdminProducts().filter(p=>p.id!==id));carregarProdutosAdmin();}
+function editarProdutoAdmin(p){if(!ehAdmin())return;document.getElementById('adminEditProduto')?.remove();const m=document.createElement('div');m.id='adminEditProduto';m.className='admin-overlay';m.innerHTML=`<div class="admin-panel" style="max-width:650px;min-height:auto;margin-top:25px"><div class="admin-top"><div><h2>📦 ${p.isNew?'Cadastrar':'Editar'} produto</h2></div><button class="admin-close" onclick="this.closest('.admin-overlay').remove()">Fechar</button></div><div class="admin-body"><div class="admin-card"><div class="admin-edit-grid"><div><label>Código</label><input id="apCode" value="${esc(p.code||'')}" ${p.isNew?'':'readonly'}><small class="admin-muted">${p.isNew?'O código será gravado exatamente como informado.':'O código existente é imutável para preservar a chave primária e o vínculo da imagem.'}</small></div><div><label>Categoria</label><input id="apCat" value="${esc(p.category||'')}"></div><div class="full"><label>Nome</label><input id="apName" value="${esc(p.name||'')}"></div><div><label>Tamanho</label><input id="apSize" value="${esc(p.size||'')}"></div><div><label>Preço Distribuidor</label><input id="apPrice" type="number" step="0.01" min="0" value="${p.price??0}"></div><div><label>Preço Salão Bahia</label><input id="apSalon" type="number" step="0.01" min="0" value="${p.salonPrice??''}"></div><div><label>Status</label><select id="apActive"><option value="true">Ativo</option><option value="false">Inativo</option></select></div></div><button class="primary" style="width:100%;margin-top:12px" onclick="salvarProdutoAdmin('${esc(p.id)}',${p.isNew?'true':'false'})">Salvar produto</button></div></div></div>`;document.body.appendChild(m);document.getElementById('apActive').value=p.active===false?'false':'true';}
+async function salvarProdutoAdmin(id,isNew){
+ if(!await validarAdminProdutos())return;
+ const atual=isNew?null:getAdminProducts().find(p=>String(p.id)===String(id));
+ if(!isNew&&!atual){alert('Produto não encontrado no catálogo carregado. Atualize a lista e tente novamente.');return;}
+ const obj={id:isNew?undefined:id,code:document.getElementById('apCode').value,name:document.getElementById('apName').value,size:document.getElementById('apSize').value,category:document.getElementById('apCat').value,price:document.getElementById('apPrice').value,salonPrice:document.getElementById('apSalon').value===''?null:document.getElementById('apSalon').value,active:document.getElementById('apActive').value==='true'};
+ try{
+  if(atual&&codigoOriginalAmbiguo(atual.code))throw new Error(`O código ${atual.code} está duplicado no catálogo original. Corrija esse conflito na origem antes de persistir alterações por código.`);
+  if(atual&&obj.code!==atual.code)throw new Error('O código do produto existente não pode ser alterado.');
+  const payload=produtoParaBanco(obj);
+  if(isNew&&getAdminProducts().some(p=>String(p.code)===payload.codigo))throw new Error('Já existe um produto no catálogo com este código.');
+  let result;
+  if(atual&&produtosSupabase.some(p=>String(p.code)===String(atual.code)))result=await supabaseClient.from('produtos').update(payload).eq('codigo',atual.code).select('*').single();
+  else result=await supabaseClient.from('produtos').insert(payload).select('*').single();
+  if(result.error)throw result.error;
+  if(!result.data)throw new Error('O Supabase não confirmou o produto salvo.');
+  incorporarProdutoBanco(result.data);document.getElementById('adminEditProduto')?.remove();alert('Produto salvo no catálogo compartilhado.');
+ }catch(error){console.error('Erro ao salvar produto:',error);alert('Não foi possível salvar o produto no Supabase: '+(error.message||'erro de rede, autorização ou conflito.'))}
+}
+async function alternarProdutoAdmin(id){
+ if(!await validarAdminProdutos())return;
+ const p=getAdminProducts().find(x=>String(x.id)===String(id));if(!p)return;
+ if(codigoOriginalAmbiguo(p.code)){alert(`O código ${p.code} está duplicado no catálogo original. Corrija esse conflito na origem antes de alterar o status.`);return;}
+ const payload=produtoParaBanco({...p,active:p.active===false});
+ try{
+  let result;
+  if(produtosSupabase.some(x=>String(x.code)===String(p.code)))result=await supabaseClient.from('produtos').update(payload).eq('codigo',p.code).select('*').single();
+  else result=await supabaseClient.from('produtos').insert(payload).select('*').single();
+  if(result.error)throw result.error;if(!result.data)throw new Error('O Supabase não confirmou a alteração.');
+  incorporarProdutoBanco(result.data);alert(payload.ativo?'Produto ativado no catálogo compartilhado.':'Produto desativado no catálogo compartilhado.');
+ }catch(error){console.error('Erro ao alterar status do produto:',error);alert('Não foi possível alterar o status no Supabase: '+(error.message||'erro de rede, autorização ou conflito.'))}
+}
+async function excluirProdutoAdmin(id){
+ const p=getAdminProducts().find(x=>String(x.id)===String(id));if(!p)return;
+ if(codigoOriginalAmbiguo(p.code)){alert(`O código ${p.code} está duplicado no catálogo original. Corrija esse conflito na origem antes de excluir ou desativar.`);return;}
+ const produtoOriginal=products.some(x=>String(x.code)===String(p.code));
+ if(!confirm(produtoOriginal?'Este código pertence ao catálogo original. O registro será mantido no Supabase como inativo para ocultar a versão original. Deseja continuar?':'Excluir este produto do catálogo compartilhado?'))return;
+ if(!await validarAdminProdutos())return;
+ try{
+  let result;
+  if(produtoOriginal){
+   const payload=produtoParaBanco({...p,active:false});
+   if(produtosSupabase.some(x=>String(x.code)===String(p.code)))result=await supabaseClient.from('produtos').update(payload).eq('codigo',p.code).select('*').single();
+   else result=await supabaseClient.from('produtos').insert(payload).select('*').single();
+   if(result.error)throw result.error;if(!result.data)throw new Error('O Supabase não confirmou a desativação.');incorporarProdutoBanco(result.data);
+  }else{
+   result=await supabaseClient.from('produtos').delete().eq('codigo',p.code).select('codigo').single();
+   if(result.error)throw result.error;if(!result.data)throw new Error('O Supabase não confirmou a exclusão.');removerProdutoBancoDoCache(p.code);
+  }
+  alert(produtoOriginal?'Produto desativado no catálogo compartilhado.':'Produto excluído do catálogo compartilhado.');
+ }catch(error){console.error('Erro ao excluir produto:',error);alert('Não foi possível excluir o produto no Supabase: '+(error.message||'erro de rede, autorização ou conflito.'))}
+}
 function editarProdutoAdminPorId(id){
   const produto=getAdminProducts().find(p=>String(p.id)===String(id));
   if(!produto)return;
   editarProdutoAdmin(produto);
+}
+let produtosPendentesMigracao=[];
+function produtosIguaisNoBanco(a,b){
+ return ['codigo','categoria','nome','tamanho','preco_distribuidor','preco_salao_bahia','ativo'].every(key=>a[key]===b[key]);
+}
+function codigoOriginalAmbiguo(codigo){return products.filter(p=>String(p.code)===String(codigo)).length>1;}
+function compararMigracaoLocal(){
+ const raw=localStorage.getItem('consulta_anuar_admin_products');
+ if(!raw)return {candidatos:[],conflitos:[],ignorados:0,ausente:true};
+ let locais;
+ try{locais=JSON.parse(raw);}catch(_error){throw new Error('Os dados locais estão em formato inválido. Preserve o arquivo e revise o armazenamento antes de continuar.');}
+ if(!Array.isArray(locais))throw new Error('Os dados locais não são uma lista de produtos. Nenhuma alteração foi feita.');
+ const candidatos=[],conflitos=[];let ignorados=0;
+ const candidatosPorCodigo=new Map(),codigosDuplicados=new Set();
+ for(const local of locais){
+  let payload;
+  try{payload=produtoParaBanco({...local,category:local.category||'Sem categoria',active:local.active!==false});}
+  catch(error){conflitos.push({code:String(local?.code??'(sem código)'),reason:error.message});continue;}
+  const original=products.find(p=>String(p.id)===String(local.id));
+  if(original&&String(local.code)!==String(original.code)){
+   conflitos.push({code:payload.codigo,reason:`O código legado ${original.code} foi alterado localmente; a migração segura não renomeia códigos nem move vínculos de imagem.`});continue;
+  }
+  if(original){
+   let base;
+   try{base=produtoParaBanco({...original,category:'Sem categoria',active:true});}
+   catch(_error){conflitos.push({code:payload.codigo,reason:'Produto original inválido; revise manualmente.'});continue;}
+   if(produtosIguaisNoBanco(payload,base)){ignorados++;continue;}
+   if(codigoOriginalAmbiguo(payload.codigo)){
+    conflitos.push({code:payload.codigo,reason:'O catálogo original contém mais de um produto com este código; a tabela compartilhada exige códigos únicos.'});continue;
+   }
+  }else if(products.some(p=>String(p.code)===payload.codigo)){
+   conflitos.push({code:payload.codigo,reason:'O código já pertence a um produto original, mas este registro local não corresponde ao seu identificador original.'});continue;
+  }
+  if(codigosDuplicados.has(payload.codigo))continue;
+  if(candidatosPorCodigo.has(payload.codigo)){
+   conflitos.push({code:payload.codigo,reason:'Há mais de um registro local modificado com o mesmo código, que é chave única no Supabase.'});
+   candidatosPorCodigo.delete(payload.codigo);codigosDuplicados.add(payload.codigo);continue;
+  }
+  candidatosPorCodigo.set(payload.codigo,{payload,local});
+ }
+ for(const [code,item] of candidatosPorCodigo){
+  const remoto=produtosSupabase.find(p=>String(p.code)===code);
+  if(remoto){
+   const bancoRemoto=produtoParaBanco(remoto);
+   if(produtosIguaisNoBanco(item.payload,bancoRemoto))ignorados++;
+   else conflitos.push({code,reason:'O código já existe no Supabase com dados diferentes. O registro remoto foi preservado.'});
+   continue;
+  }
+  candidatos.push(item.payload);
+ }
+ return {candidatos,conflitos,ignorados,ausente:false};
+}
+async function prepararMigracaoProdutosAdmin(){
+ if(!await validarAdminProdutos())return;
+ try{await carregarCatalogoProdutos({force:true});}
+ catch(error){alert('Não foi possível consultar o catálogo remoto. A migração foi cancelada: '+(error.message||'erro de rede ou autorização.'));return;}
+ let plano;
+ try{plano=compararMigracaoLocal();}
+ catch(error){alert(error.message||'Não foi possível ler os dados locais.');return;}
+ produtosPendentesMigracao=plano.candidatos;
+ document.getElementById('migracaoProdutosModal')?.remove();
+ const modal=document.createElement('div');modal.id='migracaoProdutosModal';modal.className='admin-overlay';
+ const conflitos=plano.conflitos.length?`<div class="admin-warning" style="padding:10px;margin-top:10px"><b>Conflitos para revisão (${plano.conflitos.length})</b><ul>${plano.conflitos.map(x=>`<li><b>${esc(x.code)}</b>: ${esc(x.reason)}</li>`).join('')}</ul></div>`:'<p class="admin-success" style="padding:10px">Nenhum conflito detectado.</p>';
+ const lista=plano.candidatos.length?`<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Código</th><th>Nome</th><th>Categoria</th><th>Distribuidor</th><th>Salão Bahia</th><th>Status</th></tr></thead><tbody>${plano.candidatos.map(p=>`<tr><td>${esc(p.codigo)}</td><td>${esc(p.nome)}</td><td>${esc(p.categoria)}</td><td>${brl(p.preco_distribuidor)}</td><td>${p.preco_salao_bahia==null?'—':brl(p.preco_salao_bahia)}</td><td>${p.ativo?'Ativo':'Inativo'}</td></tr>`).join('')}</tbody></table></div>`:'<div class="admin-empty">Nenhum produto local novo ou modificado está pronto para importar.</div>';
+ modal.innerHTML=`<div class="admin-panel" style="max-width:900px;min-height:auto;margin:20px auto"><div class="admin-top"><div><h2>Migração segura de produtos locais</h2><p>Os dados locais serão preservados.</p></div><button class="admin-close" onclick="document.getElementById('migracaoProdutosModal')?.remove()">Fechar</button></div><div class="admin-body"><p>${plano.ausente?'Não foi encontrada a chave local consulta_anuar_admin_products neste navegador.':'Revisão: '+plano.candidatos.length+' pronto(s) para inserir, '+plano.conflitos.length+' conflito(s), '+plano.ignorados+' registro(s) original(is) ou já sincronizado(s) ignorado(s).'}</p><p class="admin-muted">Somente registros locais diferentes do catálogo original podem ser candidatos. A importação usa INSERT e nunca sobrescreve um código existente. A chave local não será apagada, mesmo após sucesso.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button class="secondary" onclick="exportarProdutosLocais()">Baixar cópia local JSON</button>${plano.candidatos.length?'<button class="primary" onclick="importarProdutosPendentes()">Importar produtos sem conflito</button>':''}</div>${conflitos}${lista}<div id="resultadoMigracaoProdutos" class="admin-muted" style="margin-top:12px"></div></div></div>`;
+ document.body.appendChild(modal);
+}
+function exportarProdutosLocais(){
+ const raw=localStorage.getItem('consulta_anuar_admin_products');
+ if(!raw){alert('Não há dados locais de produtos para exportar.');return;}
+ const blob=new Blob([raw],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download='consulta-anuar-produtos-locais.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function importarProdutosPendentes(){
+ if(!produtosPendentesMigracao.length)return;
+ if(!confirm(`Inserir ${produtosPendentesMigracao.length} produto(s) local(is) sem conflito no Supabase? Os dados locais serão mantidos. Códigos que já existam não serão sobrescritos.`))return;
+ if(!await validarAdminProdutos())return;
+ const resultado=document.getElementById('resultadoMigracaoProdutos');if(resultado)resultado.textContent='Importando com segurança...';
+ const inseridos=[],falhas=[];
+ for(const payload of produtosPendentesMigracao){
+  try{
+   const {data,error}=await supabaseClient.from('produtos').insert(payload).select('*').single();
+   if(error)throw error;if(!data)throw new Error('O Supabase não confirmou a gravação.');
+   incorporarProdutoBanco(data);inseridos.push(payload.codigo);
+  }catch(error){falhas.push({code:payload.codigo,message:error.message||'erro de rede, autorização ou conflito'});}
+ }
+ produtosPendentesMigracao=[];
+ if(resultado)resultado.innerHTML=`<b>${inseridos.length} produto(s) inserido(s).</b>${falhas.length?`<div class="admin-warning" style="padding:10px;margin-top:8px">${falhas.map(x=>`<div>${esc(x.code)}: ${esc(x.message)}</div>`).join('')}</div>`:'<p class="admin-success" style="padding:10px">Importação confirmada pelo Supabase.</p>'}<p>Os dados locais foram mantidos. Atualize a lista para conferir o catálogo compartilhado.</p>`;
+ await carregarProdutosAdmin(true);
 }
 function abrirMenuProduto(botao){
   const menu=botao.parentElement.querySelector('.admin-product-menu');
