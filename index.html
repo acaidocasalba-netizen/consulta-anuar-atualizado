@@ -5741,21 +5741,97 @@ async function salvarPerfilAdmin(id){
 
 /* ---------- CADASTRAR CD ---------- */
 
+
 function abrirCadastroCDAdmin(){
 
-  const modal =
-    document.getElementById(
-      'adminCadastroCDModal'
-    );
+  if(!ehAdmin()) return;
 
-  if(modal)
-    modal.style.display = 'flex';
+  let modal =
+    document.getElementById('adminCadastroCDModal');
+
+  if(!modal){
+
+    modal = document.createElement('div');
+
+    modal.id = 'adminCadastroCDModal';
+    modal.className = 'admin-overlay';
+
+    modal.innerHTML = `
+      <div
+        class="admin-panel"
+        style="
+          max-width:500px;
+          min-height:auto;
+          margin:40px auto;
+        "
+      >
+
+        <div class="admin-top">
+
+          <div>
+            <h2>🏢 Cadastrar CD</h2>
+            <p>Adicione um centro de distribuição</p>
+          </div>
+
+          <button
+            type="button"
+            class="admin-close"
+            onclick="fecharCadastroCDAdmin()"
+          >
+            Fechar
+          </button>
+
+        </div>
+
+        <div class="admin-body">
+
+          <label for="novoCDNome">
+            Nome do CD
+          </label>
+
+          <input
+            id="novoCDNome"
+            type="text"
+            placeholder="Digite o nome do CD"
+            style="width:100%;margin:10px 0 20px;"
+          >
+
+          <div style="display:flex;gap:10px;">
+
+            <button
+              type="button"
+              onclick="cadastrarCDAdmin()"
+            >
+              Cadastrar
+            </button>
+
+            <button
+              type="button"
+              onclick="fecharCadastroCDAdmin()"
+            >
+              Cancelar
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+  }
+
+  modal.style.display = 'flex';
 
   const input =
     document.getElementById('novoCDNome');
 
-  if(input)
+  if(input){
     input.value = '';
+    input.focus();
+  }
 
 }
 
