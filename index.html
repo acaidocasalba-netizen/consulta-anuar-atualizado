@@ -3495,8 +3495,8 @@ let carregamentoCatalogoProdutos=null;
 let erroCatalogoProdutos=null;
 const brl=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
 function normalizarCodigoProduto(value){
- const code=String(value??'');
- if(!code||code!==code.trim()||! /^[A-Za-z0-9._-]{1,64}$/.test(code)){
+ const code=String(value??'').trim();
+ if(!code||! /^[A-Za-z0-9._-]{1,64}$/.test(code)){
   throw new Error('Use um código de 1 a 64 caracteres, sem espaços. O código será mantido exatamente como informado.');
  }
  return code;
@@ -4394,33 +4394,75 @@ function mostrarLogin() {
    LIBERAR SITE APÓS LOGIN
 ================================ */
 
-function liberarSite() {
+async function liberarSite() {
+  mostrarLogin();
+  sessionStorage.removeItem("consulta_anuar_logado");
+  sessionStorage.removeItem("consulta_anuar_aberta");
+  sessionStorage.removeItem("consulta_anuar_tipo");
+  sessionStorage.removeItem("consulta_anuar_admin");
+  sessionStorage.removeItem("consulta_anuar_acesso");
 
-  const telaLogin = document.getElementById("telaLogin");
+  try {
+    const {data:{session},error:sessionError}=await supabaseClient.auth.getSession();
+    if(sessionError){
+      console.error("ERRO AO VALIDAR SESSÃO:",sessionError);
+      const mensagem=document.getElementById("loginMensagem");
+      if(mensagem)mensagem.textContent="Não foi possível validar sua sessão. Confira a conexão e tente novamente.";
+      return null;
+    }
+    if(!session?.user)return null;
 
-  if (telaLogin) {
-    telaLogin.remove();
+    const {data:{user},error:userError}=await supabaseClient.auth.getUser();
+    if(userError||!user||user.id!==session.user.id){
+      await supabaseClient.auth.signOut();
+      return null;
+    }
+
+    const {data:perfil,error:erroPerfil}=await supabaseClient
+      .from("perfis")
+      .select("id, tipo, acesso_ativo")
+      .eq("id",user.id)
+      .single();
+    if(erroPerfil){
+      console.error("ERRO AO VALIDAR PERFIL:",erroPerfil);
+      const mensagem=document.getElementById("loginMensagem");
+      if(mensagem)mensagem.textContent="Não foi possível verificar seu acesso. Confira a conexão e tente novamente.";
+      return null;
+    }
+    if(!perfil||perfil.id!==user.id||perfil.acesso_ativo!==true){
+      await supabaseClient.auth.signOut();
+      const mensagem=document.getElementById("loginMensagem");
+      if(mensagem)mensagem.textContent="Seu acesso está bloqueado. Procure o administrador.";
+      return null;
+    }
+
+    sessionStorage.setItem("consulta_anuar_logado","1");
+    sessionStorage.setItem("consulta_anuar_tipo",perfil.tipo||"usuario");
+    sessionStorage.setItem("consulta_anuar_admin",perfil.tipo==="admin"?"1":"0");
+    sessionStorage.setItem("consulta_anuar_acesso","1");
+
+    const telaLogin=document.getElementById("telaLogin");
+    if(telaLogin)telaLogin.remove();
+    Array.from(document.body.children).forEach(el=>{el.style.display="";});
+    const menuButton=document.getElementById("menuButton");
+    if(menuButton)menuButton.style.display="flex";
+    return perfil;
+  } catch(error) {
+    console.error("ERRO AO LIBERAR INTERFACE:",error);
+    const mensagem=document.getElementById("loginMensagem");
+    if(mensagem)mensagem.textContent="Não foi possível validar sua sessão. Confira a conexão e tente novamente.";
+    return null;
   }
-
-  Array.from(document.body.children).forEach(el => {
-    el.style.display = "";
-  });
-
-  sessionStorage.setItem("consulta_anuar_logado", "1");
-
-  const menuButton = document.getElementById("menuButton");
-  if (menuButton) menuButton.style.display = "flex";
 }
 
-async function ativarSessaoAutorizada(perfil) {
-  sessionStorage.setItem("consulta_anuar_tipo", perfil.tipo || "usuario");
-  sessionStorage.setItem("consulta_anuar_admin", perfil.tipo === "admin" ? "1" : "0");
-  sessionStorage.setItem("consulta_anuar_acesso", perfil.acesso_ativo === true ? "1" : "0");
-  liberarSite();
+async function ativarSessaoAutorizada() {
+  const perfil=await liberarSite();
+  if(!perfil)return false;
   configurarMenuAdmin(perfil);
   void carregarImagensProdutos();
   await carregarCatalogoProdutos({force:true}).catch(error=>{erroCatalogoProdutos=error;estadoCatalogoProdutos='error';});
   renderizarPesquisaProdutos();
+  return true;
 }
 
 
@@ -4439,29 +4481,7 @@ async function verificarAcesso() {
   try {
     const {data:{session},error:sessionError}=await supabaseClient.auth.getSession();
     if(sessionError||!session?.user)return;
-    const {data:{user},error:userError}=await supabaseClient.auth.getUser();
-    if(userError||!user){
-      await supabaseClient.auth.signOut();
-      return;
-    }
-    const {data:perfil,error:erroPerfil}=await supabaseClient
-      .from("perfis")
-      .select("tipo, acesso_ativo")
-      .eq("id",user.id)
-      .single();
-    if(erroPerfil){
-      console.error("ERRO AO VALIDAR PERFIL:",erroPerfil);
-      const mensagem=document.getElementById("loginMensagem");
-      if(mensagem)mensagem.textContent="Não foi possível verificar seu acesso. Confira a conexão e tente novamente.";
-      return;
-    }
-    if(!perfil||perfil.acesso_ativo!==true){
-      await supabaseClient.auth.signOut();
-      const mensagem=document.getElementById("loginMensagem");
-      if(mensagem)mensagem.textContent="Seu acesso está bloqueado. Procure o administrador.";
-      return;
-    }
-    await ativarSessaoAutorizada(perfil);
+    await ativarSessaoAutorizada();
   } catch(error) {
     console.error("ERRO AO RESTAURAR SESSÃO:",error);
     const mensagem=document.getElementById("loginMensagem");
@@ -4508,30 +4528,7 @@ async function entrar() {
 
     return;
   }
-console.log("LOGIN OK");
-
-const { data: perfil, error: erroPerfil } = await supabaseClient
-  .from("perfis")
-  .select("tipo, acesso_ativo")
-  .eq("id", data.user.id)
-  .single();
-
-if (erroPerfil) {
-    console.error("ERRO PERFIL:", erroPerfil);
-    mensagem.textContent =
-        "ERRO PERFIL: " + (erroPerfil.message || JSON.stringify(erroPerfil));
-    await supabaseClient.auth.signOut();
-    return;
-}
-
-
-if (!perfil || perfil.acesso_ativo !== true) {
-    await supabaseClient.auth.signOut();
-    mensagem.textContent = "Seu acesso está bloqueado. Procure o administrador.";
-    return;
-  }
-
-  await ativarSessaoAutorizada(perfil);
+  await ativarSessaoAutorizada();
   
 }
 
