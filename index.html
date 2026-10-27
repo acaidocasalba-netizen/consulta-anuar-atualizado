@@ -3529,8 +3529,9 @@ async function colunaDisponivel(tabela,coluna){
 async function carregarExclusoesCatalogo(){
  const {data,error}=await supabaseClient.from(PRODUTO_CATALOGO_EXCLUSOES_TABLE).select('catalogo_id');
  if(error){
-  if(erroTabelaAusente(error)){produtosCatalogoExcluidos=new Set();suporteExclusoesCatalogo=false;return false;}
-  throw new Error('Não foi possível carregar o estado de exclusão do catálogo. A listagem foi bloqueada para evitar exibir produtos já removidos: '+(error.message||'erro de rede ou autorização.'));
+  suporteExclusoesCatalogo=false;
+  if(erroTabelaAusente(error))throw new Error(`A tabela ${PRODUTO_CATALOGO_EXCLUSOES_TABLE} está ausente ou não está exposta para consulta. O catálogo foi bloqueado para evitar exibir produtos já removidos. Verifique a configuração e tente novamente.`);
+  throw new Error(`Não foi possível carregar o estado de exclusão do catálogo. A listagem foi bloqueada para evitar exibir produtos já removidos: ${error.message||'erro de rede ou autorização.'}`);
  }
  produtosCatalogoExcluidos=new Set((data||[]).map(row=>String(row.catalogo_id??'').trim()).filter(Boolean));
  suporteExclusoesCatalogo=true;
@@ -3647,16 +3648,29 @@ function produtoAmbiguoSemIdRemoto(produto){
  return (produto.ambiguousCommercialCode||codigoOriginalAmbiguo(produto.code))&&!(MIGRACAO_IDENTIDADE_VALIDADA&&suporteIdProduto&&produto.supabaseId);
 }
 function catalogoIdExclusaoSeguro(produto){
- if(!produto?.isOriginal||produto.isPersisted)return null;
+ if(!produto)return null;
  const catalogoId=String(produto.catalogoId??'').trim();
- if(!catalogoId||String(produto.id)!==catalogoId)return null;
- const originais=products.filter(original=>String(original.id??'').trim()===catalogoId);
- if(originais.length!==1||String(originais[0].code)!==String(produto.code))return null;
- if(produtosSupabase.some(remoto=>String(remoto.code)===String(produto.code)))return null;
+ if(!catalogoId)return null;
+ const originaisComCatalogoId=products.filter(original=>String(original.id??'').trim()===catalogoId);
+ if(originaisComCatalogoId.length>1)return null;
+ if(originaisComCatalogoId.length===1&&String(originaisComCatalogoId[0].code)!==String(produto.code))return null;
+ if(produto.isOriginal){
+  if(String(produto.id)!==catalogoId)return null;
+  const originais=products.filter(original=>String(original.id??'').trim()===catalogoId);
+  if(originais.length!==1||String(originais[0].code)!==String(produto.code))return null;
+ }else if(!produto.isPersisted)return null;
+ const remotosPorCatalogo=produtosSupabase.filter(remoto=>String(remoto.catalogoId??'').trim()===catalogoId);
+ if(produto.isPersisted){
+  if(remotosPorCatalogo.length!==1||String(remotosPorCatalogo[0].code)!==String(produto.code))return null;
+  if(remotosPorCatalogo[0].supabaseId&&produtosSupabase.filter(remoto=>remoto.supabaseId===remotosPorCatalogo[0].supabaseId).length!==1)return null;
+  if(!produto.isOriginal&&String(produto.id)!==String(remotosPorCatalogo[0].id))return null;
+  if(produto.supabaseId&&remotosPorCatalogo[0].supabaseId!==produto.supabaseId)return null;
+  return catalogoId;
+ }
+ if(remotosPorCatalogo.length||produtosSupabase.some(remoto=>String(remoto.code)===String(produto.code)))return null;
  return catalogoId;
 }
 function produtoPodeExcluirAdmin(produto){
- if(!produtoAmbiguoSemIdRemoto(produto))return true;
  return suporteExclusoesCatalogo&&!!catalogoIdExclusaoSeguro(produto);
 }
 function filtroIdentidadeRemota(produto){
@@ -5083,45 +5097,36 @@ async function alternarProdutoAdmin(id){
 }
 async function excluirProdutoAdmin(id){
  const p=getAdminProducts().find(x=>String(x.id)===String(id));if(!p)return;
- const catalogoId=catalogoIdExclusaoSeguro(p),excluirPorCatalogo=!!(catalogoId&&suporteExclusoesCatalogo);
- if(produtoAmbiguoSemIdRemoto(p)&&!excluirPorCatalogo){alert(`O código ${p.code} é ambíguo e o esquema atual não identifica a linha do produto. A exclusão segura pelo ID interno requer a migração da tabela ${PRODUTO_CATALOGO_EXCLUSOES_TABLE}; nenhuma linha ou imagem foi alterada.`);return;}
- const produtoOriginal=p.isOriginal===true;
- const mensagemConfirmacao=excluirPorCatalogo?'Remover este produto do catálogo pelo ID interno? O registro original e os vínculos/arquivos de imagem serão preservados.':produtoOriginal?'Este produto pertence ao catálogo original. O registro será mantido no Supabase como inativo. Deseja continuar?':'Excluir este produto do catálogo compartilhado?';
+ const mensagemConfirmacao='Remover este produto do catálogo pelo ID interno? O registro original e os vínculos/arquivos de imagem serão preservados.';
  if(!confirm(mensagemConfirmacao))return;
+ const catalogoId=catalogoIdExclusaoSeguro(p);
+ if(!suporteExclusoesCatalogo||!catalogoId){
+  const motivo=produtoAmbiguoSemIdRemoto(p)?`O código ${p.code} não identifica uma linha remota com segurança.`:'Este produto não possui um ID de catálogo validado para exclusão lógica.';
+  alert(`${motivo} A exclusão só pode ser registrada com segurança na tabela ${PRODUTO_CATALOGO_EXCLUSOES_TABLE}, que precisa estar acessível. Nenhum produto ou imagem foi alterado.`);
+  return;
+ }
  if(!await validarAdminProdutos())return;
- if(!excluirPorCatalogo&&!validarEsquemaProdutoEscrita())return;
+ if(produtosCatalogoExcluidos.has(catalogoId)){
+  renderizarPesquisaProdutos();
+  filtrarProdutosAdmin();
+  alert('A exclusão lógica deste produto já está registrada no catálogo. Nenhum novo registro foi criado.');
+  return;
+ }
  try{
-  if(excluirPorCatalogo){
-   let {data,error}=await supabaseClient.from(PRODUTO_CATALOGO_EXCLUSOES_TABLE).insert({catalogo_id:catalogoId,codigo:String(p.code),nome_snapshot:String(p.name||'')}).select('catalogo_id').single();
-   if(error&&String(error.code||'')==='23505'){
-    const {data:existente,error:erroVerificacao}=await supabaseClient.from(PRODUTO_CATALOGO_EXCLUSOES_TABLE).select('catalogo_id').eq('catalogo_id',catalogoId).maybeSingle();
-    if(erroVerificacao)throw new Error('A exclusão pode já estar registrada, mas não foi possível confirmá-la pelo ID interno: '+(erroVerificacao.message||'erro de leitura.'));
-    if(String(existente?.catalogo_id??'')!==catalogoId)throw error;
-    data=existente;error=null;
-   }
-   if(error)throw error;
-   if(String(data?.catalogo_id??'')!==catalogoId)throw new Error('O Supabase não confirmou a exclusão pelo ID interno.');
-   produtosCatalogoExcluidos.add(catalogoId);
-   renderizarPesquisaProdutos();
-   filtrarProdutosAdmin();
-   alert('Produto removido do catálogo pelo ID interno. O catálogo original e a imagem compartilhada foram preservados.');
-   return;
+  let {data,error}=await supabaseClient.from(PRODUTO_CATALOGO_EXCLUSOES_TABLE).insert({catalogo_id:catalogoId,codigo:String(p.code),nome_snapshot:String(p.name||'')}).select('catalogo_id').single();
+  let tombstoneExistente=false;
+  if(error&&String(error.code||'')==='23505'){
+   const {data:existente,error:erroVerificacao}=await supabaseClient.from(PRODUTO_CATALOGO_EXCLUSOES_TABLE).select('catalogo_id').eq('catalogo_id',catalogoId).maybeSingle();
+   if(erroVerificacao)throw new Error('A exclusão pode já estar registrada, mas não foi possível confirmá-la pelo ID interno: '+(erroVerificacao.message||'erro de leitura.'));
+   if(String(existente?.catalogo_id??'')!==catalogoId)throw error;
+   data=existente;error=null;tombstoneExistente=true;
   }
-  let result;
-  if(produtoOriginal){
-   const payload=produtoParaBanco({...p,active:false});
-   const filtro=filtroIdentidadeRemota(p);
-   if(p.isPersisted&&!filtro)throw new Error('Não foi possível determinar uma identidade única para este produto.');
-   if(p.isPersisted)result=await supabaseClient.from('produtos').update(payload).eq(filtro.coluna,filtro.valor).select('*').single();
-   else result=await supabaseClient.from('produtos').insert(payload).select('*').single();
-   if(result.error)throw result.error;if(!result.data)throw new Error('O Supabase não confirmou a desativação.');incorporarProdutoBanco(result.data,p.catalogoId);
-  }else{
-   const filtro=filtroIdentidadeRemota(p);
-   if(!filtro)throw new Error('Não foi possível determinar uma identidade única para este produto.');
-   result=await supabaseClient.from('produtos').delete().eq(filtro.coluna,filtro.valor).select('*').single();
-   if(result.error)throw result.error;if(!result.data)throw new Error('O Supabase não confirmou a exclusão.');removerProdutoBancoDoCache(p);
-  }
-  alert(produtoOriginal?'Produto desativado no catálogo compartilhado.':'Produto excluído do catálogo compartilhado.');
+  if(error)throw error;
+  if(String(data?.catalogo_id??'')!==catalogoId)throw new Error('O Supabase não confirmou a exclusão pelo ID interno.');
+  produtosCatalogoExcluidos.add(catalogoId);
+  renderizarPesquisaProdutos();
+  filtrarProdutosAdmin();
+  alert(tombstoneExistente?'A exclusão lógica já estava registrada. Nenhum registro duplicado foi criado.':'Produto removido do catálogo pelo ID interno. O catálogo original e os vínculos/arquivos de imagem foram preservados.');
  }catch(error){console.error('Erro ao excluir produto:',error);alert('Não foi possível excluir o produto no Supabase: '+(error.message||'erro de rede, autorização ou conflito.'))}
 }
 function editarProdutoAdminPorId(id){
